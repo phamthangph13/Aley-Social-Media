@@ -12,20 +12,24 @@ export class NotificationService {
   private apiUrl = `${environment.apiUrl}/notifications`;
   private notificationsSubject = new BehaviorSubject<Notification[]>([]);
   private unreadCountSubject = new BehaviorSubject<number>(0);
+  private isLoadingSubject = new BehaviorSubject<boolean>(false);
   
   notifications$ = this.notificationsSubject.asObservable();
   unreadCount$ = this.unreadCountSubject.asObservable();
+  isLoading$ = this.isLoadingSubject.asObservable();
 
   constructor(
     private http: HttpClient,
     private socketService: SocketService
   ) {
     this.initializeSocketListeners();
+    this.monitorSocketConnection();
   }
 
   private initializeSocketListeners(): void {
     this.socketService.listenForEvent<Notification>('receiveNotification').subscribe(notification => {
       if (notification) {
+        console.log('Received real-time notification:', notification);
         // Add the new notification to the list
         const currentNotifications = this.notificationsSubject.value;
         this.notificationsSubject.next([notification, ...currentNotifications]);
@@ -36,11 +40,27 @@ export class NotificationService {
     });
   }
 
+  private monitorSocketConnection(): void {
+    // Monitor socket connection status
+    this.socketService.connectionStatus$.subscribe(isConnected => {
+      console.log('Socket connection status changed:', isConnected);
+      
+      // When reconnected, refresh notifications
+      if (isConnected) {
+        console.log('Socket reconnected, refreshing notifications');
+        this.getNotifications().subscribe();
+      }
+    });
+  }
+
   getNotifications(): Observable<NotificationResponse> {
+    this.isLoadingSubject.next(true);
     return this.http.get<NotificationResponse>(this.apiUrl).pipe(
       tap(response => {
+        console.log('Fetched notifications:', response);
         this.notificationsSubject.next(response.notifications);
         this.unreadCountSubject.next(response.unreadCount);
+        this.isLoadingSubject.next(false);
       })
     );
   }
@@ -88,5 +108,10 @@ export class NotificationService {
         this.unreadCountSubject.next(0);
       })
     );
+  }
+  
+  // Method to force refresh notifications
+  refreshNotifications(): void {
+    this.getNotifications().subscribe();
   }
 } 

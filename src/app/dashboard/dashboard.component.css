@@ -4,66 +4,67 @@
   background-color: #f0f2f5;
 }
 
+
+
 .sidebar {
   width: 250px;
-  background-color: white;
+  background-color: #7134b7;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-}
-
-.sidebar-header {
-  display: flex;
   align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid #e4e6eb;
+  padding: 20px 0;
 }
 
-.rounded-logo {
-  width: 40px;
-  height: 40px;
+.logo-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+  width: 100%;
+  padding: 20px 0;
+}
+
+.logo-image {
+  width: 160px;
+  height: auto;
+  max-width: 80%;
   border-radius: 50%;
-  object-fit: cover;
-  margin-right: 10px;
 }
 
-.sidebar-header h1 {
-  font-size: 24px;
-  color: #1877f2;
-  margin: 0;
-}
-
-.sidebar-menu {
+.nav-menu {
   display: flex;
   flex-direction: column;
+  width: 100%;
   padding: 15px 0;
 }
 
-.menu-item {
+.nav-menu a {
   display: flex;
   align-items: center;
   padding: 12px 20px;
-  color: #1c1e21;
+  color: #ffffff;
   text-decoration: none;
   transition: background-color 0.3s;
+  margin-bottom: 5px;
 }
 
-.menu-item:hover {
-  background-color: #f0f2f5;
+.nav-menu a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
-.menu-item.active {
-  background-color: #e7f3ff;
-  border-left: 3px solid #1877f2;
-  color: #1877f2;
+.nav-menu a.active {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-left: 3px solid #ffffff;
 }
 
-.menu-item i {
+.nav-menu a i {
   font-size: 20px;
   width: 30px;
+  color: #ffffff;
 }
 
-.menu-item span {
+.nav-menu a span {
   margin-left: 10px;
   font-weight: 500;
 }
@@ -340,4 +341,137 @@
 .empty-notifications p {
   margin: 0;
   font-size: 14px;
+}
+
+/* Add CSS for connection status */
+.connection-status {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+  font-size: 0.8rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.connected .status-dot {
+  background-color: #48c774;
+  box-shadow: 0 0 5px #48c774;
+}
+
+.disconnected .status-dot {
+  background-color: #f14668;
+  box-shadow: 0 0 5px #f14668;
+}
+
+.connected .status-text {
+  color: #48c774;
+}
+
+.disconnected .status-text {
+  color: #f14668;
+}
+
+.reconnect-btn {
+  background: none;
+  border: none;
+  color: #f14668;
+  cursor: pointer;
+  margin-left: 5px;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.reconnect-btn:hover {
+  color: #e43f5a;
+}
+
+/* Update panel header for refresh button */
+.panel-actions {
+  display: flex;
+  align-items: center;
+}
+
+.refresh-btn {
+  background: none;
+  border: none;
+  color: #1877f2;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  margin-right: 10px;
+}
+
+.refresh-btn:disabled {
+  color: #8d949e;
+  cursor: not-allowed;
+}
+
+/* Notification loading state */
+.notifications-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #1877f2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.notifications-loading p {
+  margin: 0;
+  color: #65676b;
+  font-size: 14px;
+}
+
+/* Connection error styling */
+.connection-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  color: #f14668;
+}
+
+.connection-error i {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.connection-error p {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+}
+
+.btn-reconnect {
+  background-color: #f14668;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 5px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-reconnect:hover {
+  background-color: #e43f5a;
 } 

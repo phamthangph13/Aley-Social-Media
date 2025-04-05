@@ -1,30 +1,26 @@
 <div class="dashboard-container">
   <div class="sidebar">
-    <div class="sidebar-header">
-      <img src="assets/images/logo.png" alt="Aley Logo" class="rounded-logo" />
-      <h1>Aley</h1>
+    <div class="logo-container">
+      <a routerLink="/dashboard/home">
+        <img src="assets/images/logo.png" alt="Aley Logo" class="logo-image">
+      </a>
     </div>
-    
-    <nav class="sidebar-menu">
-      <a [routerLink]="['/dashboard/home']" routerLinkActive="active" class="menu-item">
+    <nav class="nav-menu">
+      <a routerLink="/dashboard/home" routerLinkActive="active">
         <i class="fa fa-home"></i>
         <span>Trang chủ</span>
       </a>
-      <a [routerLink]="['/dashboard/search']" routerLinkActive="active" class="menu-item">
-        <i class="fa fa-search"></i>
-        <span>Tìm kiếm</span>
+      <a routerLink="/dashboard/profile" routerLinkActive="active">
+        <i class="fa fa-user"></i>
+        <span>Hồ sơ</span>
       </a>
-      <a [routerLink]="['/dashboard/friends']" routerLinkActive="active" class="menu-item">
+      <a routerLink="/dashboard/friends" routerLinkActive="active">
         <i class="fa fa-users"></i>
         <span>Bạn bè</span>
       </a>
-      <a [routerLink]="['/dashboard/messages']" routerLinkActive="active" class="menu-item">
-        <i class="fa fa-comment"></i>
+      <a routerLink="/dashboard/messages" routerLinkActive="active">
+        <i class="fa fa-comments"></i>
         <span>Tin nhắn</span>
-      </a>
-      <a [routerLink]="['/dashboard/profile']" routerLinkActive="active" class="menu-item">
-        <i class="fa fa-user"></i>
-        <span>Trang cá nhân</span>
       </a>
     </nav>
   </div>
@@ -32,6 +28,14 @@
   <div class="main-content">
     <header class="main-header">
       <div class="user-section" *ngIf="user">
+        <div class="connection-status" [class.connected]="isSocketConnected" [class.disconnected]="!isSocketConnected">
+          <span class="status-dot"></span>
+          <span class="status-text">{{ isSocketConnected ? 'Trực tuyến' : 'Ngoại tuyến' }}</span>
+          <button *ngIf="!isSocketConnected" class="reconnect-btn" (click)="reconnectSocket()" title="Kết nối lại">
+            <i class="fa fa-refresh"></i>
+          </button>
+        </div>
+        
         <div class="notifications" (click)="toggleNotificationsPanel()">
           <i class="fa fa-bell"></i>
           <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount }}</span>
@@ -44,12 +48,23 @@
       <div class="notifications-panel" *ngIf="showNotificationsPanel">
         <div class="panel-header">
           <h3>Thông báo</h3>
-          <button class="mark-all-read-btn" (click)="markAllAsRead()" *ngIf="unreadNotificationCount > 0">
-            Đánh dấu tất cả đã đọc
-          </button>
+          <div class="panel-actions">
+            <button class="refresh-btn" (click)="refreshNotifications()" [disabled]="isNotificationsLoading" title="Làm mới">
+              <i class="fa fa-refresh" [class.fa-spin]="isNotificationsLoading"></i>
+            </button>
+            <button class="mark-all-read-btn" (click)="markAllAsRead()" *ngIf="unreadNotificationCount > 0" [disabled]="isNotificationsLoading">
+              Đánh dấu tất cả đã đọc
+            </button>
+          </div>
         </div>
         
-        <div class="notifications-list" *ngIf="notifications.length > 0">
+        <!-- Loading indicator -->
+        <div class="notifications-loading" *ngIf="isNotificationsLoading">
+          <div class="spinner-small"></div>
+          <p>Đang tải thông báo...</p>
+        </div>
+        
+        <div class="notifications-list" *ngIf="!isNotificationsLoading && notifications.length > 0">
           <div 
             *ngFor="let notification of notifications" 
             class="notification-item"
@@ -64,7 +79,14 @@
           </div>
         </div>
         
-        <div class="empty-notifications" *ngIf="notifications.length === 0">
+        <!-- Connection error message -->
+        <div class="connection-error" *ngIf="!isSocketConnected && !isNotificationsLoading">
+          <i class="fa fa-exclamation-triangle"></i>
+          <p>Kết nối thời gian thực bị gián đoạn</p>
+          <button class="btn-reconnect" (click)="reconnectSocket()">Kết nối lại</button>
+        </div>
+        
+        <div class="empty-notifications" *ngIf="!isNotificationsLoading && notifications.length === 0">
           <i class="fa fa-bell-o"></i>
           <p>Không có thông báo nào</p>
         </div>

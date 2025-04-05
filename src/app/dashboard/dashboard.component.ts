@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { NotificationService } from '../services/notification.service';
+import { SocketService } from '../services/socket.service';
 import { Notification } from '../models/notification.model';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -17,22 +19,29 @@ import { Notification } from '../models/notification.model';
     RouterOutlet
   ]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   user: any = null;
   unreadNotificationCount: number = 0;
   notifications: Notification[] = [];
   showNotificationsPanel: boolean = false;
+  isSocketConnected: boolean = false;
+  isNotificationsLoading: boolean = false;
+  private subscriptions: Subscription[] = [];
   
   constructor(
     private authService: AuthService,
     public router: Router,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private socketService: SocketService
   ) { }
   
   ngOnInit(): void {
-    this.authService.currentUser.subscribe(user => {
-      this.user = user;
-    });
+    // Subscribe to user info
+    this.subscriptions.push(
+      this.authService.currentUser.subscribe(user => {
+        this.user = user;
+      })
+    );
     
     this.loadUserProfile();
     
@@ -40,13 +49,37 @@ export class DashboardComponent implements OnInit {
     this.loadNotifications();
     
     // Subscribe to real-time notifications
-    this.notificationService.unreadCount$.subscribe(count => {
-      this.unreadNotificationCount = count;
-    });
+    this.subscriptions.push(
+      this.notificationService.unreadCount$.subscribe(count => {
+        this.unreadNotificationCount = count;
+      })
+    );
     
-    this.notificationService.notifications$.subscribe(notifications => {
-      this.notifications = notifications;
-    });
+    this.subscriptions.push(
+      this.notificationService.notifications$.subscribe(notifications => {
+        this.notifications = notifications;
+      })
+    );
+    
+    // Subscribe to notification loading state
+    this.subscriptions.push(
+      this.notificationService.isLoading$.subscribe(isLoading => {
+        this.isNotificationsLoading = isLoading;
+      })
+    );
+    
+    // Monitor socket connection
+    this.subscriptions.push(
+      this.socketService.connectionStatus$.subscribe(isConnected => {
+        this.isSocketConnected = isConnected;
+        console.log('Dashboard socket connection status:', isConnected);
+      })
+    );
+  }
+  
+  ngOnDestroy(): void {
+    // Unsubscribe from all subscriptions
+    this.subscriptions.forEach(sub => sub.unsubscribe());
   }
   
   loadUserProfile(): void {
@@ -54,19 +87,44 @@ export class DashboardComponent implements OnInit {
   }
   
   loadNotifications() {
-    this.notificationService.getNotifications().subscribe();
+    this.notificationService.getNotifications().subscribe({
+      error: (err) => {
+        console.error('Error loading notifications:', err);
+      }
+    });
   }
   
   toggleNotificationsPanel() {
     this.showNotificationsPanel = !this.showNotificationsPanel;
+    
+    // Refresh notifications when opening the panel
+    if (this.showNotificationsPanel) {
+      this.refreshNotifications();
+    }
+  }
+
+  refreshNotifications() {
+    this.notificationService.refreshNotifications();
+  }
+  
+  reconnectSocket() {
+    this.socketService.reconnect();
   }
   
   markAsRead(notificationId: string) {
-    this.notificationService.markAsRead(notificationId).subscribe();
+    this.notificationService.markAsRead(notificationId).subscribe({
+      error: (err) => {
+        console.error('Error marking notification as read:', err);
+      }
+    });
   }
   
   markAllAsRead() {
-    this.notificationService.markAllAsRead().subscribe();
+    this.notificationService.markAllAsRead().subscribe({
+      error: (err) => {
+        console.error('Error marking all notifications as read:', err);
+      }
+    });
   }
   
   getNotificationText(notification: Notification): string {
