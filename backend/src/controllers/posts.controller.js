@@ -48,10 +48,13 @@ exports.createPost = async (req, res) => {
     
     // Add hashtags if provided
     if (hashtags) {
-      // Convert string of hashtags to array and clean them
-      const hashtagArray = hashtags.split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0);
+      const hashtagArray = Array.isArray(hashtags) 
+        ? hashtags 
+        : typeof hashtags === 'string'
+          ? hashtags.split(',')
+              .map(tag => tag.trim())
+              .filter(tag => tag.length > 0)
+          : [];
       
       post.hashtags = hashtagArray;
     }
@@ -241,15 +244,34 @@ exports.updatePost = async (req, res) => {
     const postId = req.params.id;
     const { content, hashtags, emotion, privacy } = req.body;
     
+    console.log('Update post request:', {
+      postId,
+      userId: req.user.id,
+      content,
+      privacy
+    });
+    
     // Find the post
     const post = await Post.findById(postId);
     
     if (!post) {
+      console.log('Post not found');
       return res.status(404).json({ message: 'Post not found' });
     }
     
+    console.log('Post found:', {
+      postId: post._id,
+      postUserId: post.user.toString(),
+      requestUserId: req.user.id,
+      requestUserIdToString: req.user.id.toString(),
+      isOwner: post.user.toString() === req.user.id.toString(),
+      postUserType: typeof post.user,
+      requestUserIdType: typeof req.user.id
+    });
+    
     // Check ownership
-    if (post.user.toString() !== req.user.id) {
+    if (post.user.toString() !== req.user.id.toString()) {
+      console.log('Authorization failed: User does not own this post');
       return res.status(403).json({ message: 'You can only update your own posts' });
     }
     
@@ -260,9 +282,13 @@ exports.updatePost = async (req, res) => {
     
     // Update hashtags if provided
     if (hashtags) {
-      const hashtagArray = hashtags.split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0);
+      const hashtagArray = Array.isArray(hashtags) 
+        ? hashtags 
+        : typeof hashtags === 'string'
+          ? hashtags.split(',')
+              .map(tag => tag.trim())
+              .filter(tag => tag.length > 0)
+          : [];
       
       post.hashtags = hashtagArray;
     }
@@ -272,6 +298,7 @@ exports.updatePost = async (req, res) => {
     
     // Save the updated post
     await post.save();
+    console.log('Post updated successfully');
     
     // Populate user data
     await post.populate('user', 'firstName lastName avatarUrl');
@@ -286,25 +313,136 @@ exports.updatePost = async (req, res) => {
   }
 };
 
-// Delete a post
-exports.deletePost = async (req, res) => {
+// Update a post with media
+exports.updatePostWithMedia = async (req, res) => {
   try {
     const postId = req.params.id;
+    const { content, hashtags, emotion, privacy } = req.body;
+    
+    console.log('Update post with media request:', {
+      postId,
+      userId: req.user.id,
+      content,
+      privacy,
+      filesCount: req.files ? req.files.length : 0
+    });
     
     // Find the post
     const post = await Post.findById(postId);
     
     if (!post) {
+      console.log('Post not found');
       return res.status(404).json({ message: 'Post not found' });
     }
     
     // Check ownership
-    if (post.user.toString() !== req.user.id) {
+    if (post.user.toString() !== req.user.id.toString()) {
+      console.log('Authorization failed: User does not own this post');
+      return res.status(403).json({ message: 'You can only update your own posts' });
+    }
+    
+    // Update fields if provided
+    if (content) post.content = content;
+    if (emotion) post.emotion = emotion;
+    if (privacy) post.privacy = privacy;
+    
+    // Update hashtags if provided
+    if (hashtags) {
+      const hashtagArray = Array.isArray(hashtags) 
+        ? hashtags 
+        : typeof hashtags === 'string'
+          ? hashtags.split(',')
+              .map(tag => tag.trim())
+              .filter(tag => tag.length > 0)
+          : [];
+      
+      post.hashtags = hashtagArray;
+    }
+    
+    // Clear existing media if new files are uploaded
+    if (req.files && req.files.length > 0) {
+      post.images = [];
+      post.videos = [];
+      
+      // Process uploaded files
+      for (const file of req.files) {
+        if (file.mimetype.startsWith('image/')) {
+          // Process and resize image
+          const buffer = await sharp(file.buffer)
+            .resize({ width: 1200, fit: 'inside' })
+            .toBuffer();
+          
+          post.images.push({
+            data: buffer,
+            contentType: file.mimetype
+          });
+        } else if (file.mimetype.startsWith('video/')) {
+          // Store video as is
+          post.videos.push({
+            data: file.buffer,
+            contentType: file.mimetype
+          });
+        }
+      }
+    }
+    
+    // Update timestamp
+    post.updatedAt = Date.now();
+    
+    // Save the updated post
+    await post.save();
+    console.log('Post updated successfully with media');
+    
+    // Populate user data
+    await post.populate('user', 'firstName lastName avatarUrl');
+    
+    res.status(200).json({
+      message: 'Post updated successfully',
+      post: post.getFormattedPost()
+    });
+  } catch (error) {
+    console.error('Error updating post with media:', error);
+    res.status(500).json({ message: 'Failed to update post', error: error.message });
+  }
+};
+
+// Delete a post
+exports.deletePost = async (req, res) => {
+  try {
+    const postId = req.params.id;
+    
+    console.log('Delete post request:', {
+      postId,
+      userId: req.user.id
+    });
+    
+    // Find the post
+    const post = await Post.findById(postId);
+    
+    if (!post) {
+      console.log('Post not found');
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    
+    console.log('Post found:', {
+      postId: post._id,
+      postUserId: post.user.toString(),
+      requestUserId: req.user.id,
+      requestUserIdToString: req.user.id.toString(),
+      isOwner: post.user.toString() === req.user.id.toString(),
+      postUserType: typeof post.user,
+      requestUserIdType: typeof req.user.id
+    });
+    
+    // Check ownership
+    if (post.user.toString() !== req.user.id.toString()) {
+      console.log('Authorization failed: User does not own this post');
       return res.status(403).json({ message: 'You can only delete your own posts' });
     }
     
     // Delete the post
     await Post.findByIdAndDelete(postId);
+    console.log('Post deleted successfully');
     
     res.status(200).json({ message: 'Post deleted successfully' });
   } catch (error) {

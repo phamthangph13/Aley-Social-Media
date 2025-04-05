@@ -163,6 +163,22 @@
                 <i *ngIf="post.privacy === 'private'" class="fas fa-lock"></i>
               </span>
             </div>
+            <!-- Three dots menu - only show for current user's posts -->
+            <div class="post-menu" *ngIf="isCurrentUserPost(post)">
+              <div class="dropdown">
+                <button class="dropdown-toggle" (click)="togglePostMenu($event, post._id)">
+                  <i class="fas fa-ellipsis-h"></i>
+                </button>
+                <div class="dropdown-menu" [class.show]="activePostMenu === post._id">
+                  <a class="dropdown-item" (click)="editPost(post)">
+                    <i class="fas fa-edit"></i> Chỉnh sửa bài viết
+                  </a>
+                  <a class="dropdown-item delete" (click)="confirmDeletePost(post._id)">
+                    <i class="fas fa-trash"></i> Xóa bài viết
+                  </a>
+                </div>
+              </div>
+            </div>
           </div>
           
           <!-- Post Content -->
@@ -214,4 +230,121 @@
 <div class="loading-spinner" *ngIf="isLoading">
   <div class="spinner"></div>
   <p>Đang tải thông tin...</p>
-</div> 
+</div>
+
+<!-- Add the edit post modal -->
+<div class="modal" [class.show]="isEditingPost" *ngIf="postToEdit">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Chỉnh sửa bài viết</h5>
+        <button type="button" class="close" (click)="cancelEditPost()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="editPostForm" (ngSubmit)="updatePost()">
+          <div class="form-group">
+            <textarea formControlName="content" class="form-control" rows="4" placeholder="Nội dung bài viết..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Cảm xúc</label>
+            <select formControlName="emotion" class="form-control">
+              <option value="none">Không có</option>
+              <option value="happy">Vui vẻ 😊</option>
+              <option value="sad">Buồn 😢</option>
+              <option value="angry">Tức giận 😠</option>
+              <option value="excited">Phấn khích 🤩</option>
+              <option value="surprised">Ngạc nhiên 😲</option>
+              <option value="loved">Yêu thích ❤️</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quyền riêng tư</label>
+            <select formControlName="privacy" class="form-control">
+              <option value="public">Công khai</option>
+              <option value="friends">Chỉ bạn bè</option>
+              <option value="private">Chỉ mình tôi</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Hashtags (phân cách bằng dấu phẩy)</label>
+            <input type="text" formControlName="hashtags" class="form-control" placeholder="hashtag1, hashtag2, ...">
+          </div>
+          
+          <!-- Media upload section -->
+          <div class="form-group">
+            <label>Thêm ảnh/video mới</label>
+            <div class="media-upload">
+              <label for="edit-media-files" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-image"></i> Chọn ảnh/video
+              </label>
+              <input 
+                type="file" 
+                id="edit-media-files" 
+                multiple 
+                accept="image/*,video/*" 
+                (change)="onEditFileChange($event)" 
+                style="display: none;"
+              >
+            </div>
+          </div>
+          
+          <!-- Media preview -->
+          <div *ngIf="editPreviewImages.length > 0" class="media-preview">
+            <div *ngFor="let preview of editPreviewImages; let i = index" class="preview-item">
+              <img [src]="preview" alt="Preview">
+              <button type="button" class="btn btn-sm btn-danger" (click)="removeEditFile(i)">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Existing Media preview -->
+          <div *ngIf="postToEdit?.imageUrls && postToEdit.imageUrls.length > 0" class="existing-media">
+            <label>Ảnh hiện tại</label>
+            <div class="media-preview">
+              <div *ngFor="let image of postToEdit.imageUrls; let i = index" class="preview-item">
+                <img [src]="image" alt="Existing image">
+              </div>
+            </div>
+          </div>
+          
+          <div *ngIf="postToEdit?.videoUrls && postToEdit.videoUrls.length > 0" class="existing-media">
+            <label>Video hiện tại</label>
+            <div class="media-preview">
+              <div *ngFor="let video of postToEdit.videoUrls; let i = index" class="preview-item">
+                <video [src]="video" controls></video>
+              </div>
+            </div>
+          </div>
+          
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="cancelEditPost()">Hủy</button>
+            <button type="submit" class="btn btn-primary" [disabled]="editPostForm.invalid">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal" [class.show]="isDeletingPost">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Xác nhận xóa</h5>
+        <button type="button" class="close" (click)="cancelDeletePost()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Bạn có chắc chắn muốn xóa bài viết này?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cancelDeletePost()">Hủy</button>
+        <button type="button" class="btn btn-danger" (click)="deletePost()">Xóa</button>
+      </div>
+    </div>
+  </div> 

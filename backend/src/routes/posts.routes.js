@@ -18,6 +18,9 @@ router.get('/:id', auth, postsController.getPostById);
 // Update a post
 router.put('/:id', auth, postsController.updatePost);
 
+// Update a post with media
+router.put('/:id/media', auth, postsController.uploadMedia, postsController.updatePostWithMedia);
+
 // Delete a post
 router.delete('/:id', auth, postsController.deletePost);
 

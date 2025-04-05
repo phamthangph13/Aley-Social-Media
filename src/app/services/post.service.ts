@@ -36,9 +36,14 @@ export class PostService {
     return this.http.post(this.apiUrl, postData);
   }
 
-  // Update a post
+  // Update a post (text only)
   updatePost(postId: string, postData: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/${postId}`, postData);
+  }
+  
+  // Update a post with media
+  updatePostWithMedia(postId: string, formData: FormData): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${postId}/media`, formData);
   }
 
   // Delete a post
