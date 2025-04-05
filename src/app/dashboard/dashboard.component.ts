@@ -194,4 +194,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     localStorage.removeItem('user');
     this.router.navigate(['/auth/login']);
   }
+  
+  navigateToBlockedUsers(): void {
+    this.router.navigate(['/dashboard/settings'], { queryParams: { tab: 'blocked' } });
+  }
 } 

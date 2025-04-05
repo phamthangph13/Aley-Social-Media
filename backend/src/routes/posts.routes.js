@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth.middleware');
+const checkBlockStatus = require('../middlewares/block.middleware');
 const postsController = require('../controllers/posts.controller');
 
 // Create a new post with media upload
@@ -10,7 +11,7 @@ router.post('/', auth, postsController.uploadMedia, postsController.createPost);
 router.get('/', auth, postsController.getPosts);
 
 // Get posts for a user profile
-router.get('/user/:userId', auth, postsController.getUserProfilePosts);
+router.get('/user/:userId', auth, checkBlockStatus('userId'), postsController.getUserProfilePosts);
 
 // Get a specific post by ID
 router.get('/:id', auth, postsController.getPostById);

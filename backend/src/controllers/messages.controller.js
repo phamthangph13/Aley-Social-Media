@@ -8,6 +8,22 @@ const { ObjectId } = mongoose.Types;
 exports.getConversations = async (req, res) => {
   try {
     const userId = req.user.id;
+    
+    // Lấy thông tin người dùng hiện tại và danh sách chặn
+    const currentUser = await User.findById(userId);
+    
+    // Lấy danh sách ID người dùng đã bị chặn
+    const blockedUserIds = currentUser.blockedUsers.map(id => id.toString());
+    
+    // Lấy danh sách ID người dùng đã chặn user hiện tại
+    const usersWhoBlockedMe = await User.find(
+      { blockedUsers: currentUser._id },
+      { _id: 1 }
+    );
+    const blockedByUserIds = usersWhoBlockedMe.map(user => user._id.toString());
+    
+    // Kết hợp cả hai danh sách để lọc
+    const excludedUserIds = [...blockedUserIds, ...blockedByUserIds];
 
     // Find all conversations where the current user is a participant
     const conversations = await Conversation.find({ participants: userId })
@@ -22,8 +38,21 @@ exports.getConversations = async (req, res) => {
       })
       .sort({ lastMessageTime: -1 }); // Sort by most recent message
 
+    // Lọc danh sách cuộc hội thoại để loại bỏ người đã chặn/bị chặn
+    const filteredConversations = conversations.filter(conversation => {
+      // Lấy người tham gia khác (không phải người dùng hiện tại)
+      const otherParticipant = conversation.participants[0];
+      
+      // Nếu không có người tham gia khác, bỏ qua cuộc hội thoại
+      if (!otherParticipant) return false;
+      
+      // Kiểm tra xem người tham gia có trong danh sách chặn không
+      const otherUserId = otherParticipant._id.toString();
+      return !excludedUserIds.includes(otherUserId);
+    });
+      
     // Format conversation data
-    const formattedConversations = conversations.map(conversation => {
+    const formattedConversations = filteredConversations.map(conversation => {
       const formattedConversation = conversation.toObject();
       
       // Get the other person in the conversation (for 1-1 chats)
@@ -92,13 +121,40 @@ exports.getMessages = async (req, res) => {
     const conversation = await Conversation.findOne({
       _id: conversationId,
       participants: userId
-    });
+    }).populate('participants');
 
     if (!conversation) {
       return res.status(404).json({
         success: false,
         message: 'Không tìm thấy cuộc trò chuyện'
       });
+    }
+    
+    // Lấy thông tin người dùng khác trong cuộc trò chuyện
+    const otherParticipant = conversation.participants.find(
+      p => p._id.toString() !== userId
+    );
+    
+    if (otherParticipant) {
+      // Kiểm tra xem người dùng hiện tại đã chặn người dùng khác chưa
+      const currentUser = await User.findById(userId);
+      const hasBlockedOther = currentUser.blockedUsers.some(
+        id => id.toString() === otherParticipant._id.toString()
+      );
+      
+      // Kiểm tra xem người dùng khác đã chặn người dùng hiện tại chưa
+      const isBlockedByOther = otherParticipant.blockedUsers && otherParticipant.blockedUsers.some(
+        id => id.toString() === userId
+      );
+      
+      if (hasBlockedOther || isBlockedByOther) {
+        return res.status(403).json({
+          success: false,
+          message: 'Không thể truy cập tin nhắn do có chặn người dùng',
+          blocked: hasBlockedOther,
+          blockedBy: isBlockedByOther
+        });
+      }
     }
 
     // Get messages for the conversation
@@ -164,13 +220,50 @@ exports.sendMessage = async (req, res) => {
     let conversation = await Conversation.findOne({
       _id: conversationId,
       participants: userId
-    }).populate('participants');
+    });
 
     if (!conversation) {
       return res.status(404).json({
         success: false,
         message: 'Không tìm thấy cuộc trò chuyện'
       });
+    }
+
+    // Tìm người nhận trực tiếp từ danh sách tham gia
+    console.log('CONVERSATION PARTICIPANTS:', conversation.participants);
+    console.log('CURRENT USER ID:', userId);
+    
+    // Lấy danh sách ID người tham gia
+    const participantIds = conversation.participants.map(id => id.toString());
+    
+    // Tìm người nhận (người tham gia khác với người gửi)
+    const recipientId = participantIds.find(id => id !== userId);
+    
+    console.log('CALCULATED RECIPIENT ID:', recipientId);
+
+    if (recipientId) {
+      // Check if either user has blocked the other
+      const [currentUser, recipient] = await Promise.all([
+        User.findById(userId),
+        User.findById(recipientId)
+      ]);
+      
+      const hasBlockedRecipient = currentUser.blockedUsers.some(
+        id => id.toString() === recipientId
+      );
+      
+      const isBlockedByRecipient = recipient.blockedUsers.some(
+        id => id.toString() === userId
+      );
+      
+      if (hasBlockedRecipient || isBlockedByRecipient) {
+        return res.status(403).json({
+          success: false,
+          message: 'Không thể gửi tin nhắn do có chặn người dùng',
+          blocked: hasBlockedRecipient,
+          blockedBy: isBlockedByRecipient
+        });
+      }
     }
 
     // Create and save the new message
@@ -202,11 +295,6 @@ exports.sendMessage = async (req, res) => {
       read: false
     };
 
-    // Get the recipient userId (assuming 1-to-1 conversation)
-    const recipientId = conversation.participants.find(
-      participant => participant._id.toString() !== userId
-    )?._id.toString();
-
     // Emit socket event if recipient is connected
     if (recipientId) {
       const io = req.app.get('io');
@@ -222,8 +310,12 @@ exports.sendMessage = async (req, res) => {
       if (recipientSocketId) {
         console.log(`Emitting message to socket ${recipientSocketId} for user ${recipientId}`);
         
+        // Chỉ gửi socket event cho người nhận, không gửi cho người gửi
         io.to(recipientSocketId).emit('receiveMessage', {
-          message: formattedMessage,
+          message: {
+            ...formattedMessage,
+            isOutgoing: false  // Đặt isOutgoing = false vì đây là tin nhắn đến cho người nhận
+          },
           conversationId: conversationId.toString()
         });
         
@@ -273,6 +365,26 @@ exports.createConversation = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Không tìm thấy người nhận'
+      });
+    }
+
+    // Check if either user has blocked the other
+    const currentUser = await User.findById(userId);
+    
+    const hasBlockedRecipient = currentUser.blockedUsers.some(
+      id => id.toString() === recipientId
+    );
+    
+    const isBlockedByRecipient = recipient.blockedUsers.some(
+      id => id.toString() === userId
+    );
+    
+    if (hasBlockedRecipient || isBlockedByRecipient) {
+      return res.status(403).json({
+        success: false,
+        message: 'Không thể tạo cuộc trò chuyện do có chặn người dùng',
+        blocked: hasBlockedRecipient,
+        blockedBy: isBlockedByRecipient
       });
     }
 
@@ -336,6 +448,41 @@ exports.createConversation = async (req, res) => {
       userId: otherParticipant._id
     };
 
+    // Thông báo cho người nhận về cuộc trò chuyện mới qua socket
+    const io = req.app.get('io');
+    const connectedUsers = req.app.get('connectedUsers');
+    const recipientSocketId = connectedUsers.get(recipientId);
+    
+    console.log('-------------- SOCKET INFO (CREATE CONV) ---------------');
+    console.log(`Sender ID: ${userId}`);
+    console.log(`Recipient ID: ${recipientId}`);
+    console.log(`Connected users: ${Array.from(connectedUsers.entries())}`);
+    console.log(`Recipient socket ID: ${recipientSocketId}`);
+    
+    if (recipientSocketId) {
+      console.log(`Emitting new conversation to socket ${recipientSocketId} for user ${recipientId}`);
+      
+      // Tạo định dạng thông báo cho người nhận
+      const messageForRecipient = {
+        id: savedMessage._id,
+        senderId: userId,
+        senderName: req.user.firstName + ' ' + req.user.lastName,
+        text: savedMessage.text,
+        time: formatMessageTime(savedMessage.createdAt),
+        isOutgoing: false,  // Là tin nhắn đến đối với người nhận
+        read: false
+      };
+      
+      // Gửi thông báo tin nhắn mới
+      io.to(recipientSocketId).emit('receiveMessage', {
+        message: messageForRecipient,
+        conversationId: conversation._id.toString()
+      });
+      
+      console.log('Socket message for new conversation sent');
+    }
+    console.log('----------------------------------------');
+
     res.json({
       success: true,
       data: {
@@ -365,32 +512,47 @@ exports.getPotentialRecipients = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    // Get user's friends
+    // Get user's friends and blocked users
     const user = await User.findById(userId)
       .populate('friends', 'firstName lastName avatar avatarType')
-      .select('friends');
+      .select('friends blockedUsers');
 
-    // Format friend data to include avatarUrl
-    const formattedFriends = user.friends.map(friend => {
-      const formattedFriend = friend.toObject();
-      
-      // Calculate avatarUrl
-      if (friend.avatar && friend.avatarType) {
-        formattedFriend.avatarUrl = `data:${friend.avatarType};base64,${friend.avatar.toString('base64')}`;
-      } else {
-        formattedFriend.avatarUrl = '/assets/images/default-avatar.png';
-      }
-      
-      // Remove binary data
-      delete formattedFriend.avatar;
-      delete formattedFriend.avatarType;
-      
-      return {
-        id: formattedFriend._id,
-        name: `${formattedFriend.firstName} ${formattedFriend.lastName}`,
-        avatar: formattedFriend.avatarUrl
-      };
-    });
+    // Also get users who have blocked the current user
+    const usersWhoBlockedMe = await User.find(
+      { blockedUsers: userId },
+      { _id: 1 }
+    );
+    
+    const blockedByIds = usersWhoBlockedMe.map(u => u._id.toString());
+
+    // Format friend data to include avatarUrl, excluding blocked users
+    const formattedFriends = user.friends
+      .filter(friend => {
+        const friendId = friend._id.toString();
+        // Exclude if user has blocked this friend or if this friend has blocked user
+        const isBlocked = user.blockedUsers.some(blockedId => blockedId.toString() === friendId);
+        return !isBlocked && !blockedByIds.includes(friendId);
+      })
+      .map(friend => {
+        const formattedFriend = friend.toObject();
+        
+        // Calculate avatarUrl
+        if (friend.avatar && friend.avatarType) {
+          formattedFriend.avatarUrl = `data:${friend.avatarType};base64,${friend.avatar.toString('base64')}`;
+        } else {
+          formattedFriend.avatarUrl = '/assets/images/default-avatar.png';
+        }
+        
+        // Remove binary data
+        delete formattedFriend.avatar;
+        delete formattedFriend.avatarType;
+        
+        return {
+          id: formattedFriend._id,
+          name: `${formattedFriend.firstName} ${formattedFriend.lastName}`,
+          avatar: formattedFriend.avatarUrl
+        };
+      });
 
     res.json({
       success: true,

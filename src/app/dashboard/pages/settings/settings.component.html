@@ -151,29 +151,31 @@
       <p class="section-desc">Quản lý danh sách người dùng mà bạn đã chặn. Người dùng bị chặn sẽ không thể nhắn tin, kết bạn hoặc xem nội dung của bạn.</p>
       
       <!-- Loading State -->
-      <div class="loading-state" *ngIf="isLoadingBlockedUsers">
+      <div *ngIf="isLoadingBlockedUsers" class="loading-state">
         <div class="spinner-small"></div>
-        <p>Đang tải danh sách...</p>
+        <p>Đang tải danh sách người dùng đã chặn...</p>
       </div>
       
       <!-- Empty State -->
-      <div class="empty-state" *ngIf="!isLoadingBlockedUsers && blockedUsers.length === 0">
-        <i class="fa fa-ban empty-icon"></i>
-        <p>Bạn chưa chặn người dùng nào</p>
+      <div *ngIf="!isLoadingBlockedUsers && blockedUsers.length === 0" class="empty-state">
+        <div class="empty-icon">
+          <i class="fa fa-ban fa-3x"></i>
+        </div>
+        <p>Bạn chưa chặn người dùng nào.</p>
       </div>
       
       <!-- Blocked Users List -->
-      <div class="blocked-users-list" *ngIf="!isLoadingBlockedUsers && blockedUsers.length > 0">
-        <div class="blocked-user-card" *ngFor="let user of blockedUsers">
+      <div *ngIf="!isLoadingBlockedUsers && blockedUsers.length > 0" class="blocked-list">
+        <div *ngFor="let user of blockedUsers" class="blocked-user-item">
           <div class="user-info">
-            <img [src]="user.avatar || 'assets/images/default-avatar.png'" alt="Avatar" class="user-avatar">
+            <img [src]="user.avatarUrl" alt="User Avatar" class="user-avatar">
             <div class="user-details">
               <h4 class="user-name">{{ user.firstName }} {{ user.lastName }}</h4>
-              <p class="block-date">Đã chặn vào {{ user.dateBlocked | date:'dd/MM/yyyy' }}</p>
             </div>
           </div>
-          <button class="btn btn-unblock" (click)="unblockUser(user._id)">
-            <i class="fa fa-unlock"></i> Bỏ chặn
+          
+          <button class="btn btn-unblock" (click)="unblockUser(user.id)">
+            <i class="fa fa-user-times"></i> Bỏ chặn
           </button>
         </div>
       </div>

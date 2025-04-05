@@ -5,12 +5,31 @@ const { ObjectId } = mongoose.Types;
 // Get all friends
 exports.getFriends = async (req, res) => {
   try {
+    // Lấy thông tin người dùng với danh sách bạn bè và người chặn
     const user = await User.findById(req.user.id)
       .populate('friends', 'firstName lastName avatar avatarType')
-      .select('friends');
+      .select('friends blockedUsers');
+
+    // Lấy danh sách ID người dùng đã bị chặn
+    const blockedUserIds = user.blockedUsers.map(id => id.toString());
+    
+    // Lấy danh sách ID người dùng đã chặn user hiện tại
+    const usersWhoBlockedMe = await User.find(
+      { blockedUsers: req.user.id },
+      { _id: 1 }
+    );
+    const blockedByUserIds = usersWhoBlockedMe.map(user => user._id.toString());
+    
+    // Kết hợp cả hai danh sách để lọc
+    const excludedUserIds = [...blockedUserIds, ...blockedByUserIds];
+    
+    // Lọc danh sách bạn bè để loại bỏ người đã chặn/bị chặn
+    const filteredFriends = user.friends.filter(friend => 
+      !excludedUserIds.includes(friend._id.toString())
+    );
 
     // Format friend data to include avatarUrl
-    const formattedFriends = user.friends.map(friend => {
+    const formattedFriends = filteredFriends.map(friend => {
       const formattedFriend = friend.toObject();
       
       // Calculate avatarUrl
@@ -48,10 +67,29 @@ exports.getFriendRequests = async (req, res) => {
         path: 'friendRequests.from',
         select: 'firstName lastName avatar avatarType'
       })
-      .select('friendRequests');
+      .select('friendRequests blockedUsers');
+
+    // Lấy danh sách ID người dùng đã bị chặn
+    const blockedUserIds = user.blockedUsers.map(id => id.toString());
+    
+    // Lấy danh sách ID người dùng đã chặn user hiện tại
+    const usersWhoBlockedMe = await User.find(
+      { blockedUsers: req.user.id },
+      { _id: 1 }
+    );
+    const blockedByUserIds = usersWhoBlockedMe.map(user => user._id.toString());
+    
+    // Kết hợp cả hai danh sách để lọc
+    const excludedUserIds = [...blockedUserIds, ...blockedByUserIds];
+    
+    // Lọc danh sách lời mời kết bạn để loại bỏ người đã chặn/bị chặn
+    const filteredRequests = user.friendRequests.filter(request => {
+      const fromUserId = request.from?._id?.toString();
+      return fromUserId && !excludedUserIds.includes(fromUserId);
+    });
 
     // Format friend requests data to include avatarUrl
-    const formattedRequests = user.friendRequests.map(request => {
+    const formattedRequests = filteredRequests.map(request => {
       const formattedRequest = request.toObject();
       
       if (request.from && request.from.avatar && request.from.avatarType) {
@@ -85,16 +123,29 @@ exports.getFriendRequests = async (req, res) => {
 // Get friend suggestions
 exports.getFriendSuggestions = async (req, res) => {
   try {
-    // Get current user with friends list
-    const currentUser = await User.findById(req.user.id).select('friends');
+    // Get current user with friends list and blocked users
+    const currentUser = await User.findById(req.user.id).select('friends blockedUsers');
     
     // Get current user's friend IDs
     const friendIds = currentUser.friends.map(id => id.toString());
     friendIds.push(req.user.id); // Add current user to excluded list
     
-    // Find users who are not friends with current user
+    // Lấy danh sách ID người dùng đã bị chặn
+    const blockedUserIds = currentUser.blockedUsers.map(id => id.toString());
+    
+    // Lấy danh sách ID người dùng đã chặn user hiện tại
+    const usersWhoBlockedMe = await User.find(
+      { blockedUsers: req.user.id },
+      { _id: 1 }
+    );
+    const blockedByUserIds = usersWhoBlockedMe.map(user => user._id.toString());
+    
+    // Kết hợp tất cả danh sách để loại trừ
+    const excludedUserIds = [...friendIds, ...blockedUserIds, ...blockedByUserIds];
+    
+    // Find users who are not friends with current user and not in blocked lists
     const suggestions = await User.find({
-      _id: { $nin: friendIds }
+      _id: { $nin: excludedUserIds }
     })
     .select('firstName lastName avatar avatarType')
     .limit(10);
@@ -364,10 +415,29 @@ exports.getSentFriendRequests = async (req, res) => {
         path: 'sentFriendRequests.to',
         select: 'firstName lastName avatar avatarType'
       })
-      .select('sentFriendRequests');
+      .select('sentFriendRequests blockedUsers');
+
+    // Lấy danh sách ID người dùng đã bị chặn
+    const blockedUserIds = user.blockedUsers.map(id => id.toString());
+    
+    // Lấy danh sách ID người dùng đã chặn user hiện tại
+    const usersWhoBlockedMe = await User.find(
+      { blockedUsers: req.user.id },
+      { _id: 1 }
+    );
+    const blockedByUserIds = usersWhoBlockedMe.map(user => user._id.toString());
+    
+    // Kết hợp cả hai danh sách để lọc
+    const excludedUserIds = [...blockedUserIds, ...blockedByUserIds];
+    
+    // Lọc danh sách lời mời đã gửi để loại bỏ người đã chặn/bị chặn
+    const filteredRequests = user.sentFriendRequests.filter(request => {
+      const toUserId = request.to?._id?.toString();
+      return toUserId && !excludedUserIds.includes(toUserId);
+    });
 
     // Format sent friend requests data to include avatarUrl
-    const formattedRequests = user.sentFriendRequests.map(request => {
+    const formattedRequests = filteredRequests.map(request => {
       const formattedRequest = request.toObject();
       
       if (request.to && request.to.avatar && request.to.avatarType) {

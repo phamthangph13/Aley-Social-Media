@@ -7,6 +7,7 @@ import { FriendsService } from '../../../services/friends.service';
 import { AuthService } from '../../../services/auth.service';
 import { PostService } from '../../../services/post.service';
 import { ProfileNavigatorService } from '../../../services/profile-navigator.service';
+import { BlockService } from '../../../services/block.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -27,6 +28,10 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   hasPendingRequest = false; // Người dùng hiện tại đã gửi lời mời kết bạn
   hasReceivedRequest = false; // Người dùng hiện tại nhận được lời mời kết bạn
   isCurrentUser = false; // Đây có phải là profile của người dùng hiện tại?
+  
+  // Trạng thái chặn
+  isBlocked = false; // Người dùng hiện tại đã chặn người dùng này
+  isBlockedBy = false; // Người dùng này đã chặn người dùng hiện tại
   
   currentUserId: string | null = null;
   
@@ -54,6 +59,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     private friendsService: FriendsService,
     private authService: AuthService,
     private postService: PostService,
+    private blockService: BlockService,
     private profileNavigator: ProfileNavigatorService
   ) { }
 
@@ -93,6 +99,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         
         this.loadUserProfile();
         this.checkFriendshipStatus();
+        this.checkBlockStatus();
         this.loadUserPosts();
       }
     });
@@ -291,6 +298,54 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         this.postsLoading = false;
         this.currentPage--; // Revert page number if failed
         console.error('Error loading more posts:', err);
+      }
+    });
+  }
+
+  checkBlockStatus(): void {
+    if (!this.userId) return;
+    
+    this.blockService.checkBlockStatus(this.userId).subscribe({
+      next: (response) => {
+        this.isBlocked = response.isBlocked;
+        this.isBlockedBy = response.isBlockedBy;
+      },
+      error: (err) => {
+        console.error('Error checking block status:', err);
+      }
+    });
+  }
+
+  blockUser(): void {
+    if (!this.userId) return;
+    
+    this.blockService.blockUser(this.userId).subscribe({
+      next: () => {
+        this.isBlocked = true;
+        
+        // Reset các trạng thái kết bạn vì chặn sẽ hủy kết bạn
+        this.isFriend = false;
+        this.hasPendingRequest = false;
+        this.hasReceivedRequest = false;
+        
+        // Tải lại các bài viết để cập nhật giao diện
+        this.loadUserPosts();
+      },
+      error: (err) => {
+        console.error('Error blocking user:', err);
+      }
+    });
+  }
+
+  unblockUser(): void {
+    if (!this.userId) return;
+    
+    this.blockService.unblockUser(this.userId).subscribe({
+      next: () => {
+        this.isBlocked = false;
+      },
+      error: (err) => {
+        console.error('Error unblocking user:', err);
       }
     });
   }

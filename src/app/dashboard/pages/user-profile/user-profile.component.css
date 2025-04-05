@@ -513,4 +513,70 @@
   background-color: #e4e6eb;
   color: #bcc0c4;
   cursor: not-allowed;
+}
+
+/* Block-related styles */
+.block-actions {
+  margin-bottom: 15px;
+}
+
+.btn-block, .btn-unblock {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-block {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.btn-block:hover {
+  background-color: #c0392b;
+}
+
+.btn-unblock {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-unblock:hover {
+  background-color: #2980b9;
+}
+
+.blocked-container, .blocked-by-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.blocked-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.blocked-message i {
+  font-size: 48px;
+  color: #e74c3c;
+  margin-bottom: 20px;
+}
+
+.blocked-message p {
+  font-size: 16px;
+  color: #555;
+  margin: 5px 0;
 } 

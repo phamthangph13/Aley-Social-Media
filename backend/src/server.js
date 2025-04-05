@@ -12,6 +12,7 @@ const postsRoutes = require('./routes/posts.routes');
 const searchRoutes = require('./routes/search.routes');
 const messagesRoutes = require('./routes/messages.routes');
 const notificationsRoutes = require('./routes/notifications.routes');
+const blockRoutes = require('./routes/block.routes');
 
 // Initialize Express app
 const app = express();
@@ -83,12 +84,15 @@ io.on('connection', (socket) => {
   // User authentication and mapping socket to user
   socket.on('authenticate', (userId) => {
     console.log(`User ${userId} authenticated on socket ${socket.id}`);
-    // Lưu cả user ID và socket ID vào Map
+    
+    // Lưu socket ID cho user ID (cho phép nhiều kết nối từ cùng một user)
+    // Đây là cách xử lý khi user mở nhiều tab/thiết bị
     connectedUsers.set(userId, socket.id);
+    
     console.log('Connected users now:', Array.from(connectedUsers.entries()));
   });
   
-  // Handle messages
+  // Handle messages - khôi phục lại xử lý sự kiện sendMessage
   socket.on('sendMessage', (data) => {
     const { recipientId, message } = data;
     console.log('Received sendMessage event:', data);
@@ -156,6 +160,7 @@ app.use('/api/posts', postsRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/block', blockRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

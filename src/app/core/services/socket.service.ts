@@ -13,20 +13,27 @@ export class SocketService {
   private connected = false;
 
   constructor(private authService: AuthService) {
-    // Khởi tạo socket với các options đầy đủ
-    // Sử dụng URL chính xác không thêm namespace
+    // Khôi phục lại URL chính xác - remove /api nếu có trong URL
     const socketUrl = environment.apiUrl.replace('/api', '');
     console.log('Connecting to socket URL:', socketUrl);
     
     this.socket = io(socketUrl, {
       transports: ['websocket', 'polling'],
+      autoConnect: true,
       reconnection: true,
       reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      autoConnect: true
+      reconnectionDelay: 1000
     });
     
+    // Thiết lập các bộ lắng nghe sự kiện socket
     this.setupSocketListeners();
+    
+    // Theo dõi người dùng đăng nhập để xác thực socket
+    this.authService.currentUser$.subscribe(user => {
+      if (user && user._id) {
+        this.authenticateSocket(user._id);
+      }
+    });
   }
 
   private setupSocketListeners(): void {
@@ -39,13 +46,6 @@ export class SocketService {
       const userId = this.authService.getCurrentUserId();
       if (userId) {
         this.authenticateSocket(userId);
-      } else {
-        // Nếu chưa có user ID, đăng ký lắng nghe khi user đăng nhập
-        this.authService.currentUser$.subscribe(user => {
-          if (user && user._id) {
-            this.authenticateSocket(user._id);
-          }
-        });
       }
     });
     
@@ -85,10 +85,15 @@ export class SocketService {
     console.log('Authenticating socket for user:', userId);
     if (this.connected) {
       this.socket.emit('authenticate', userId);
+      console.log('Socket authenticated for user:', userId);
     } else {
-      console.warn('Cannot authenticate: socket not connected');
-      // Thử kết nối lại
+      console.warn('Cannot authenticate: socket not connected - trying to reconnect');
+      // Thử kết nối lại và xác thực sau khi kết nối thành công
       this.socket.connect();
+      this.socket.once('connect', () => {
+        console.log('Socket reconnected, now authenticating');
+        this.socket.emit('authenticate', userId);
+      });
     }
   }
 
@@ -125,6 +130,22 @@ export class SocketService {
     if (!this.connected && this.socket) {
       console.log('Attempting to reconnect socket...');
       this.socket.connect();
+      
+      // Xác thực lại khi kết nối được thiết lập
+      this.socket.once('connect', () => {
+        const userId = this.authService.getCurrentUserId();
+        if (userId) {
+          console.log('Socket reconnected successfully, authenticating user:', userId);
+          this.authenticateSocket(userId);
+        }
+      });
+    } else if (this.connected) {
+      console.log('Socket already connected, ID:', this.socket.id);
+      // Nếu đã kết nối, kiểm tra xác thực
+      const userId = this.authService.getCurrentUserId();
+      if (userId) {
+        this.authenticateSocket(userId);
+      }
     }
   }
 } 

@@ -1,0 +1,38 @@
+<div class="blocked-users-container">
+  <h1 class="page-title">Người dùng đã chặn</h1>
+  
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Đang tải danh sách...</p>
+  </div>
+  
+  <!-- Error State -->
+  <div *ngIf="error" class="error-container">
+    <p>{{ error }}</p>
+  </div>
+  
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && !error && blockedUsers.length === 0" class="empty-container">
+    <div class="empty-illustration">
+      <i class="fas fa-ban"></i>
+    </div>
+    <p>Bạn chưa chặn người dùng nào.</p>
+  </div>
+  
+  <!-- Blocked Users List -->
+  <div *ngIf="!isLoading && !error && blockedUsers.length > 0" class="blocked-list">
+    <div *ngFor="let user of blockedUsers" class="blocked-user-card">
+      <div class="user-info" (click)="viewProfile(user.id)">
+        <img [src]="user.avatarUrl" alt="User Avatar" class="user-avatar">
+        <div class="user-details">
+          <h3 class="user-name">{{ user.firstName }} {{ user.lastName }}</h3>
+        </div>
+      </div>
+      
+      <button class="unblock-btn" (click)="unblockUser(user.id)">
+        <i class="fas fa-user-check"></i> Bỏ chặn
+      </button>
+    </div>
+  </div>
+</div> 

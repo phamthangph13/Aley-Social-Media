@@ -105,22 +105,51 @@ exports.getPosts = async (req, res) => {
     const { page = 1, limit = 10, userId } = req.query;
     const skip = (page - 1) * limit;
     
+    // Lấy thông tin về người dùng hiện tại, bao gồm danh sách người đã chặn
+    const currentUser = await User.findById(req.user.id);
+    
+    // Lấy danh sách ID người dùng đã bị chặn
+    const blockedUserIds = currentUser.blockedUsers.map(id => id.toString());
+    
+    // Lấy danh sách ID người dùng đã chặn user hiện tại
+    const usersWhoBlockedMe = await User.find(
+      { blockedUsers: currentUser._id },
+      { _id: 1 }
+    );
+    const blockedByUserIds = usersWhoBlockedMe.map(user => user._id.toString());
+    
+    // Kết hợp cả hai danh sách để lọc
+    const excludedUserIds = [...blockedUserIds, ...blockedByUserIds];
+    
     let query = {};
     
     // If userId is provided, get posts only from that user
     if (userId) {
+      // Kiểm tra xem userId có trong danh sách chặn không
+      if (excludedUserIds.includes(userId)) {
+        return res.status(403).json({
+          message: 'Không thể xem bài viết của người dùng này'
+        });
+      }
       query.user = userId;
     } else {
       // For regular feed, get public posts and posts from friends
-      const currentUser = await User.findById(req.user.id);
       const friendIds = currentUser.friends || [];
+      
+      // Loại bỏ bạn bè đã chặn/bị chặn
+      const validFriendIds = friendIds.filter(id => !excludedUserIds.includes(id.toString()));
       
       // Get posts that are either public, from friends (if privacy is 'friends'), or from the user themselves
       query = {
-        $or: [
-          { privacy: 'public' },
-          { user: req.user.id },
-          { user: { $in: friendIds }, privacy: { $in: ['public', 'friends'] } }
+        $and: [
+          { user: { $nin: excludedUserIds } }, // Loại bỏ bài viết từ người dùng đã chặn/bị chặn
+          {
+            $or: [
+              { privacy: 'public' },
+              { user: req.user.id },
+              { user: { $in: validFriendIds }, privacy: { $in: ['public', 'friends'] } }
+            ]
+          }
         ]
       };
     }

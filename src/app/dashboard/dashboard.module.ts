@@ -41,6 +41,11 @@ const routes: Routes = [
       { 
         path: 'user/:id',
         loadChildren: () => import('./pages/user-profile/user-profile.module').then(m => m.UserProfileModule)
+      },
+      { 
+        path: 'blocked-users',
+        redirectTo: 'settings?tab=blocked',
+        pathMatch: 'full'
       }
     ]
   }

@@ -80,6 +80,28 @@ exports.searchPosts = async (req, res) => {
  */
 async function searchUsers(query, currentUserId) {
   try {
+    // Lấy thông tin người dùng hiện tại và danh sách chặn
+    const currentUser = await User.findById(currentUserId)
+      .select('friends blockedUsers');
+    
+    if (!currentUser) {
+      console.log(`Current user with ID ${currentUserId} not found`);
+      return [];
+    }
+    
+    // Lấy danh sách ID người dùng đã bị chặn
+    const blockedUserIds = currentUser.blockedUsers.map(id => id.toString());
+    
+    // Lấy danh sách ID người dùng đã chặn user hiện tại
+    const usersWhoBlockedMe = await User.find(
+      { blockedUsers: currentUserId },
+      { _id: 1 }
+    );
+    const blockedByUserIds = usersWhoBlockedMe.map(user => user._id.toString());
+    
+    // Kết hợp cả hai danh sách để lọc
+    const excludedUserIds = [...blockedUserIds, ...blockedByUserIds];
+    
     // Create a regex for the search query (case insensitive)
     const searchRegex = new RegExp(query, 'i');
     
@@ -87,6 +109,7 @@ async function searchUsers(query, currentUserId) {
     const users = await User.find({
       $and: [
         { _id: { $ne: currentUserId } }, // Exclude current user
+        { _id: { $nin: excludedUserIds } }, // Exclude blocked/blocking users
         {
           $or: [
             { firstName: searchRegex },
@@ -104,13 +127,6 @@ async function searchUsers(query, currentUserId) {
     // Check if there are any users
     if (!users || users.length === 0) {
       return [];
-    }
-
-    // Find current user once for all operations
-    const currentUser = await User.findById(currentUserId).select('friends');
-    if (!currentUser) {
-      console.log(`Current user with ID ${currentUserId} not found`);
-      return users.map(user => user.getPublicProfile());
     }
 
     // Process user results to add common friends info
@@ -166,15 +182,35 @@ async function searchUsers(query, currentUserId) {
  */
 async function searchPosts(query, currentUserId) {
   try {
+    // Lấy thông tin người dùng hiện tại và danh sách chặn
+    const currentUser = await User.findById(currentUserId);
+    
+    // Lấy danh sách ID người dùng đã bị chặn
+    const blockedUserIds = currentUser.blockedUsers.map(id => id.toString());
+    
+    // Lấy danh sách ID người dùng đã chặn user hiện tại
+    const usersWhoBlockedMe = await User.find(
+      { blockedUsers: currentUserId },
+      { _id: 1 }
+    );
+    const blockedByUserIds = usersWhoBlockedMe.map(user => user._id.toString());
+    
+    // Kết hợp cả hai danh sách để lọc
+    const excludedUserIds = [...blockedUserIds, ...blockedByUserIds];
+    
     // Create a regex for the search query (case insensitive)
     const searchRegex = new RegExp(query, 'i');
     
     // Get friend IDs safely
-    const friendIds = await getFriendIds(currentUserId);
+    const allFriendIds = await getFriendIds(currentUserId);
+    
+    // Lọc bỏ bạn bè đã chặn/bị chặn
+    const friendIds = allFriendIds.filter(id => !excludedUserIds.includes(id));
     
     // Find posts matching the search criteria
     const posts = await Post.find({
       $and: [
+        { user: { $nin: excludedUserIds } }, // Loại bỏ bài viết từ người dùng đã chặn/bị chặn
         {
           // Only include posts that are public or from friends
           $or: [
@@ -200,40 +236,46 @@ async function searchPosts(query, currentUserId) {
     })
     .populate({
       path: 'user',
-      select: '_id firstName lastName avatar avatarType'
+      select: 'firstName lastName avatar avatarType'
     })
     .sort({ createdAt: -1 })
     .limit(10);
 
-    // Check if there are any posts
-    if (!posts || posts.length === 0) {
-      return [];
-    }
-
-    // Process post results
+    // Format each post
     return posts.map(post => {
-      try {
-        const formattedPost = post.getFormattedPost();
-        
-        // Add avatar URL safely
-        if (post.user && post.user.avatar && post.user.avatarType) {
-          formattedPost.user.avatarUrl = `data:${post.user.avatarType};base64,${post.user.avatar.toString('base64')}`;
-        } else if (post.user) {
-          formattedPost.user.avatarUrl = '/assets/images/default-avatar.png';
-        }
-        
-        // Remove binary data
-        if (formattedPost.user) {
-          delete formattedPost.user.avatar;
-          delete formattedPost.user.avatarType;
-        }
-        
-        return formattedPost;
-      } catch (err) {
-        console.error('Error formatting post:', err);
-        return null;
+      const formattedPost = post.toObject();
+      
+      // Ensure user has avatarUrl
+      if (post.user) {
+        formattedPost.user.avatarUrl = post.user.avatar && post.user.avatarType 
+          ? `data:${post.user.avatarType};base64,${post.user.avatar.toString('base64')}` 
+          : '/assets/images/default-avatar.png';
+          
+        // Remove binary data to reduce response size
+        delete formattedPost.user.avatar;
+        delete formattedPost.user.avatarType;
       }
-    }).filter(post => post !== null); // Remove any null posts
+      
+      // Process image URLs
+      formattedPost.imageUrls = [];
+      if (post.images && post.images.length > 0) {
+        formattedPost.imageUrls = post.images.map(img => 
+          `data:${img.contentType};base64,${img.data.toString('base64')}`
+        );
+      }
+      delete formattedPost.images;
+      
+      // Process video URLs (in a real app, you'd use a proper URL)
+      formattedPost.videoUrls = [];
+      if (post.videos && post.videos.length > 0) {
+        // For the purpose of this example, we'll just indicate there are videos
+        // In reality, you would generate proper URLs to the video content
+        formattedPost.videoUrls = post.videos.map((_, index) => `video_${index}`);
+      }
+      delete formattedPost.videos;
+      
+      return formattedPost;
+    });
   } catch (error) {
     console.error('Error in searchPosts function:', error);
     return [];

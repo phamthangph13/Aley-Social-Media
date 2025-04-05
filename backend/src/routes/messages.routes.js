@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const messagesController = require('../controllers/messages.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
+const checkBlockStatus = require('../middlewares/block.middleware');
 
 // Apply auth middleware to all routes
 router.use(authMiddleware);

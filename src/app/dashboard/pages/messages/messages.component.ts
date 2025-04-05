@@ -46,32 +46,47 @@ export class MessagesComponent implements OnInit, OnDestroy {
     this.socketSubscription = this.socketService.getMessages().subscribe(data => {
       console.log('Received real-time message in component:', data);
       
+      // Kiểm tra xem dữ liệu có đúng định dạng không
+      if (!data || !data.message || !data.conversationId) {
+        console.error('Received malformed socket message data:', data);
+        return;
+      }
+      
       // Handle the message based on whether we're viewing the conversation
-      if (data.conversationId && this.selectedConversation?.id === data.conversationId) {
+      if (this.selectedConversation?.id === data.conversationId) {
         console.log('Adding message to current conversation');
         // If user is currently viewing this conversation, add the message
-        if (data.message) {
-          // Đặt isOutgoing = false cho tin nhắn nhận được qua socket
-          const message = {...data.message, isOutgoing: false};
-          console.log('Modified received message:', message);
-          
-          // Add message to list
-          this.messages.push(message);
-          
-          // Also update the conversation's last message in the list
-          this.updateConversationWithNewMessage(data.conversationId, message);
-          
-          // Scroll to bottom
-          setTimeout(() => {
-            this.scrollToBottom();
-          }, 0);
-        }
+        // Đảm bảo tin nhắn có định dạng chuẩn
+        const message = data.message;
+        console.log('Modified received message:', message);
+        
+        // Add message to list
+        this.messages.push(message);
+        
+        // Also update the conversation's last message in the list
+        this.updateConversationWithNewMessage(data.conversationId, message);
+        
+        // Scroll to bottom
+        setTimeout(() => {
+          this.scrollToBottom();
+        }, 0);
       } else {
-        console.log('Updating conversation list for new message');
-        // Update the conversation list to show new message
-        this.loadConversations();
+        console.log('Updating conversation list for new message in other conversation');
+        // Kiểm tra xem cuộc trò chuyện này đã tồn tại trong danh sách chưa
+        const conversationIndex = this.conversations.findIndex(c => c.id === data.conversationId);
+        
+        if (conversationIndex !== -1) {
+          // Nếu cuộc trò chuyện đã tồn tại, cập nhật tin nhắn mới nhất
+          this.updateConversationWithNewMessage(data.conversationId, data.message);
+        } else {
+          // Nếu là cuộc trò chuyện mới, tải lại toàn bộ danh sách
+          this.loadConversations();
+        }
       }
     });
+    
+    // Tải danh sách cuộc trò chuyện ngay khi component được khởi tạo
+    this.loadConversations();
   }
   
   ngOnDestroy(): void {
@@ -238,14 +253,7 @@ export class MessagesComponent implements OnInit, OnDestroy {
             this.conversations.splice(0, 0, this.conversations.splice(convIndex, 1)[0]);
           }
           
-          // Gửi tin nhắn qua socket để người nhận cập nhật real-time
-          if (recipientId) {
-            console.log('Sending message via socket to recipient:', recipientId);
-            this.socketService.sendMessage(recipientId, {
-              ...response.data,
-              conversationId: conversationId
-            });
-          }
+          // SocketService emission removed - backend already handles socket events
           
           // Clear input and scroll to bottom
           this.newMessage = '';
@@ -330,7 +338,11 @@ export class MessagesComponent implements OnInit, OnDestroy {
       // Update the conversation
       this.conversations[index].lastMessage = message.text;
       this.conversations[index].lastMessageTime = message.time;
-      this.conversations[index].unread = true;
+      
+      // Đánh dấu là chưa đọc nếu tin nhắn đến từ người khác
+      if (!message.isOutgoing) {
+        this.conversations[index].unread = true;
+      }
       
       // Move to top of list
       if (index > 0) {

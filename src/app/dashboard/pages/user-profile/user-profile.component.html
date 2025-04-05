@@ -10,8 +10,16 @@
     <p>{{ error }}</p>
   </div>
 
+  <!-- Blocked By User Message -->
+  <div *ngIf="!isLoading && !error && isBlockedBy" class="blocked-by-container">
+    <div class="blocked-message">
+      <i class="fas fa-ban"></i>
+      <p>Bạn không thể xem hồ sơ này vì đã bị chặn bởi người dùng.</p>
+    </div>
+  </div>
+
   <!-- Profile Content -->
-  <div *ngIf="!isLoading && !error && userProfile" class="profile-content">
+  <div *ngIf="!isLoading && !error && userProfile && !isBlockedBy" class="profile-content">
     <!-- Cover Image Section -->
     <div class="cover-image-container">
       <img [src]="getCoverImageUrl(userProfile._id)" alt="Cover Image" class="cover-image">
@@ -28,158 +36,183 @@
         
         <!-- Friend Status / Add Friend Button -->
         <div class="friend-status">
-          <!-- Nếu là bạn bè -->
-          <div *ngIf="isFriend" class="friend-badge">
-            <i class="fas fa-user-check"></i> Bạn bè
-            <button class="btn-unfriend" (click)="removeFriend()">
-              <i class="fas fa-user-times"></i> Hủy kết bạn
+          <!-- Block/Unblock Buttons -->
+          <div class="block-actions">
+            <button *ngIf="!isBlocked" class="btn-block" (click)="blockUser()">
+              <i class="fas fa-ban"></i> Chặn người dùng
+            </button>
+            <button *ngIf="isBlocked" class="btn-unblock" (click)="unblockUser()">
+              <i class="fas fa-user-check"></i> Bỏ chặn
             </button>
           </div>
           
-          <!-- Nếu chưa phải bạn bè và chưa có lời mời nào -->
-          <button *ngIf="!isFriend && !hasPendingRequest && !hasReceivedRequest" 
-                  (click)="sendFriendRequest()" 
-                  class="add-friend-btn">
-            <i class="fas fa-user-plus"></i> Kết bạn
-          </button>
-          
-          <!-- Đã gửi lời mời kết bạn -->
-          <div *ngIf="!isFriend && hasPendingRequest" class="pending-badge">
-            <i class="fas fa-clock"></i> Đã gửi lời mời
-            <button class="btn-cancel" (click)="cancelFriendRequest()">
-              <i class="fas fa-times"></i> Hủy
+          <!-- Friend Status Buttons - Only show if not blocked -->
+          <ng-container *ngIf="!isBlocked">
+            <!-- Nếu là bạn bè -->
+            <div *ngIf="isFriend" class="friend-badge">
+              <i class="fas fa-user-check"></i> Bạn bè
+              <button class="btn-unfriend" (click)="removeFriend()">
+                <i class="fas fa-user-times"></i> Hủy kết bạn
+              </button>
+            </div>
+            
+            <!-- Nếu chưa phải bạn bè và chưa có lời mời nào -->
+            <button *ngIf="!isFriend && !hasPendingRequest && !hasReceivedRequest" 
+                    (click)="sendFriendRequest()" 
+                    class="add-friend-btn">
+              <i class="fas fa-user-plus"></i> Kết bạn
             </button>
-          </div>
-          
-          <!-- Đã nhận lời mời kết bạn -->
-          <div *ngIf="!isFriend && hasReceivedRequest" class="received-badge">
-            <span>Đã nhận lời mời kết bạn</span>
-            <div *ngIf="!pendingRequestId" class="friend-error">
-              <p>Không thể tải ID lời mời kết bạn. Vui lòng làm mới trang.</p>
-            </div>
-            <div *ngIf="pendingRequestId" class="friend-actions">
-              <button class="btn-accept" (click)="acceptFriendRequest()">
-                <i class="fas fa-check"></i> Chấp nhận
-              </button>
-              <button class="btn-reject" (click)="rejectFriendRequest()">
-                <i class="fas fa-times"></i> Từ chối
+            
+            <!-- Đã gửi lời mời kết bạn -->
+            <div *ngIf="!isFriend && hasPendingRequest" class="pending-badge">
+              <i class="fas fa-clock"></i> Đã gửi lời mời
+              <button class="btn-cancel" (click)="cancelFriendRequest()">
+                <i class="fas fa-times"></i> Hủy
               </button>
             </div>
-          </div>
+            
+            <!-- Đã nhận lời mời kết bạn -->
+            <div *ngIf="!isFriend && hasReceivedRequest" class="received-badge">
+              <span>Đã nhận lời mời kết bạn</span>
+              <div *ngIf="!pendingRequestId" class="friend-error">
+                <p>Không thể tải ID lời mời kết bạn. Vui lòng làm mới trang.</p>
+              </div>
+              <div *ngIf="pendingRequestId" class="friend-actions">
+                <button class="btn-accept" (click)="acceptFriendRequest()">
+                  <i class="fas fa-check"></i> Chấp nhận
+                </button>
+                <button class="btn-reject" (click)="rejectFriendRequest()">
+                  <i class="fas fa-times"></i> Từ chối
+                </button>
+              </div>
+            </div>
+          </ng-container>
         </div>
       </div>
     </div>
 
-    <!-- Bio and Details -->
-    <div class="profile-bio-container">
-      <div class="section-card bio-section">
-        <h3 class="section-title">Giới thiệu</h3>
-        <p *ngIf="userProfile.bio" class="bio-text">{{ userProfile.bio }}</p>
-        <p *ngIf="!userProfile.bio" class="empty-section">Chưa có thông tin</p>
-        
-        <div class="profile-details-list">
-          <div *ngIf="userProfile.location" class="detail-item">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>{{ userProfile.location }}</span>
-          </div>
+    <!-- Rest of the profile content - only show if not blocked -->
+    <ng-container *ngIf="!isBlocked">
+      <!-- Bio and Details -->
+      <div class="profile-bio-container">
+        <div class="section-card bio-section">
+          <h3 class="section-title">Giới thiệu</h3>
+          <p *ngIf="userProfile.bio" class="bio-text">{{ userProfile.bio }}</p>
+          <p *ngIf="!userProfile.bio" class="empty-section">Chưa có thông tin</p>
           
-          <div *ngIf="userProfile.website" class="detail-item">
-            <i class="fas fa-link"></i>
-            <a [href]="userProfile.website" target="_blank" rel="noopener noreferrer">{{ userProfile.website }}</a>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Interests Section -->
-      <div *ngIf="userProfile.interests && userProfile.interests.length > 0" class="section-card interests-section">
-        <h3 class="section-title">Sở thích</h3>
-        <div class="interests-list">
-          <span *ngFor="let interest of userProfile.interests" class="interest-tag">
-            {{ interest }}
-          </span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Posts Section -->
-    <div class="profile-posts-section">
-      <h3 class="section-title">Bài viết</h3>
-      
-      <!-- Loading State -->
-      <div *ngIf="postsLoading && currentPage === 1" class="posts-loading">
-        <div class="spinner"></div>
-        <p>Đang tải bài viết...</p>
-      </div>
-      
-      <!-- Error State -->
-      <div *ngIf="postsError" class="posts-error">
-        <p>{{ postsError }}</p>
-      </div>
-      
-      <!-- Empty State -->
-      <div *ngIf="!postsLoading && !postsError && posts.length === 0" class="posts-empty">
-        <p>Chưa có bài viết nào</p>
-      </div>
-      
-      <!-- Posts List -->
-      <div *ngIf="posts.length > 0" class="posts-list">
-        <div *ngFor="let post of posts" class="post-card">
-          <!-- Post Header -->
-          <div class="post-header">
-            <img [src]="post.user.avatarUrl" alt="User Avatar" class="post-avatar">
-            <div class="post-info">
-              <h4 class="post-author">{{ post.user.firstName }} {{ post.user.lastName }}</h4>
-              <p class="post-time">{{ post.createdAt | date:'short' }}</p>
-              <!-- Privacy indicator -->
-              <span class="post-privacy" [ngClass]="post.privacy">
-                <i *ngIf="post.privacy === 'public'" class="fas fa-globe"></i>
-                <i *ngIf="post.privacy === 'friends'" class="fas fa-user-friends"></i>
-                <i *ngIf="post.privacy === 'private'" class="fas fa-lock"></i>
-              </span>
+          <div class="profile-details-list">
+            <div *ngIf="userProfile.location" class="detail-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <span>{{ userProfile.location }}</span>
+            </div>
+            
+            <div *ngIf="userProfile.website" class="detail-item">
+              <i class="fas fa-link"></i>
+              <a [href]="userProfile.website" target="_blank" rel="noopener noreferrer">{{ userProfile.website }}</a>
             </div>
           </div>
-          
-          <!-- Post Content -->
-          <div class="post-content">
-            <p>{{ post.content }}</p>
-            
-            <!-- Post Images -->
-            <div *ngIf="post.imageUrls && post.imageUrls.length > 0" class="post-images">
-              <div [ngClass]="{'single-image': post.imageUrls.length === 1, 'multiple-images': post.imageUrls.length > 1}">
-                <img *ngFor="let imageUrl of post.imageUrls" [src]="imageUrl" alt="Post Image" class="post-image">
+        </div>
+        
+        <!-- Interests Section -->
+        <div *ngIf="userProfile.interests && userProfile.interests.length > 0" class="section-card interests-section">
+          <h3 class="section-title">Sở thích</h3>
+          <div class="interests-list">
+            <span *ngFor="let interest of userProfile.interests" class="interest-tag">
+              {{ interest }}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Posts Section -->
+      <div class="profile-posts-section">
+        <h3 class="section-title">Bài viết</h3>
+        
+        <!-- Loading State -->
+        <div *ngIf="postsLoading && currentPage === 1" class="posts-loading">
+          <div class="spinner"></div>
+          <p>Đang tải bài viết...</p>
+        </div>
+        
+        <!-- Error State -->
+        <div *ngIf="postsError" class="posts-error">
+          <p>{{ postsError }}</p>
+        </div>
+        
+        <!-- Empty State -->
+        <div *ngIf="!postsLoading && !postsError && posts.length === 0" class="posts-empty">
+          <p>Chưa có bài viết nào</p>
+        </div>
+        
+        <!-- Posts List -->
+        <div *ngIf="posts.length > 0" class="posts-list">
+          <div *ngFor="let post of posts" class="post-card">
+            <!-- Post Header -->
+            <div class="post-header">
+              <img [src]="post.user.avatarUrl" alt="User Avatar" class="post-avatar">
+              <div class="post-info">
+                <h4 class="post-author">{{ post.user.firstName }} {{ post.user.lastName }}</h4>
+                <p class="post-time">{{ post.createdAt | date:'short' }}</p>
+                <!-- Privacy indicator -->
+                <span class="post-privacy" [ngClass]="post.privacy">
+                  <i *ngIf="post.privacy === 'public'" class="fas fa-globe"></i>
+                  <i *ngIf="post.privacy === 'friends'" class="fas fa-user-friends"></i>
+                  <i *ngIf="post.privacy === 'private'" class="fas fa-lock"></i>
+                </span>
               </div>
             </div>
             
-            <!-- Post Videos -->
-            <div *ngIf="post.videoUrls && post.videoUrls.length > 0" class="post-videos">
-              <video *ngFor="let videoUrl of post.videoUrls" [src]="videoUrl" controls class="post-video"></video>
+            <!-- Post Content -->
+            <div class="post-content">
+              <p>{{ post.content }}</p>
+              
+              <!-- Post Images -->
+              <div *ngIf="post.imageUrls && post.imageUrls.length > 0" class="post-images">
+                <div [ngClass]="{'single-image': post.imageUrls.length === 1, 'multiple-images': post.imageUrls.length > 1}">
+                  <img *ngFor="let imageUrl of post.imageUrls" [src]="imageUrl" alt="Post Image" class="post-image">
+                </div>
+              </div>
+              
+              <!-- Post Videos -->
+              <div *ngIf="post.videoUrls && post.videoUrls.length > 0" class="post-videos">
+                <video *ngFor="let videoUrl of post.videoUrls" [src]="videoUrl" controls class="post-video"></video>
+              </div>
+              
+              <!-- Hashtags -->
+              <div *ngIf="post.hashtags && post.hashtags.length > 0" class="post-hashtags">
+                <span *ngFor="let tag of post.hashtags" class="hashtag">#{{ tag }}</span>
+              </div>
             </div>
             
-            <!-- Hashtags -->
-            <div *ngIf="post.hashtags && post.hashtags.length > 0" class="post-hashtags">
-              <span *ngFor="let tag of post.hashtags" class="hashtag">#{{ tag }}</span>
-            </div>
-          </div>
-          
-          <!-- Post Stats -->
-          <div class="post-stats">
-            <div class="likes-count">
-              <i class="fas fa-thumbs-up"></i> {{ post.likes?.length || 0 }}
-            </div>
-            <div class="comments-count">
-              <i class="fas fa-comment"></i> {{ post.comments?.length || 0 }}
+            <!-- Post Stats -->
+            <div class="post-stats">
+              <div class="likes-count">
+                <i class="fas fa-thumbs-up"></i> {{ post.likes?.length || 0 }}
+              </div>
+              <div class="comments-count">
+                <i class="fas fa-comment"></i> {{ post.comments?.length || 0 }}
+              </div>
             </div>
           </div>
         </div>
+        
+        <!-- Load More Button -->
+        <div *ngIf="posts.length > 0 && currentPage < totalPages" class="load-more">
+          <button (click)="loadMorePosts()" [disabled]="postsLoading" class="load-more-btn">
+            <span *ngIf="!postsLoading">Tải thêm</span>
+            <span *ngIf="postsLoading" class="spinner-small"></span>
+          </button>
+        </div>
       </div>
-      
-      <!-- Load More Button -->
-      <div *ngIf="posts.length > 0 && currentPage < totalPages" class="load-more">
-        <button (click)="loadMorePosts()" [disabled]="postsLoading" class="load-more-btn">
-          <span *ngIf="!postsLoading">Tải thêm</span>
-          <span *ngIf="postsLoading" class="spinner-small"></span>
-        </button>
+    </ng-container>
+    
+    <!-- Blocked User Message -->
+    <div *ngIf="isBlocked" class="blocked-container">
+      <div class="blocked-message">
+        <i class="fas fa-ban"></i>
+        <p>Bạn đã chặn người dùng này.</p>
+        <p>Bạn không thể xem thông tin của họ cho đến khi bỏ chặn.</p>
       </div>
     </div>
   </div>
-</div> 
+</div>

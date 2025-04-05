@@ -29,6 +29,15 @@ exports.getProfile = async (req, res) => {
  */
 exports.getProfileById = async (req, res) => {
   try {
+    // Special case - handle non-ID routes
+    const specialRoutes = ['blocked-users', 'settings', 'help-center'];
+    if (specialRoutes.includes(req.params.userId)) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Invalid user ID, this appears to be a route name' 
+      });
+    }
+    
     const user = await User.findById(req.params.userId);
     
     if (!user) {
