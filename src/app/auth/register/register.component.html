@@ -1,0 +1,149 @@
+<div class="split-container">
+  <div class="content-section">
+    <h1>Welcome to Aley</h1>
+    <p>Aley helps you connect and share with the people in your life.</p>
+    <div class="features">
+      <div class="feature-item">
+        <i class="fa fa-users"></i>
+        <p>Connect with friends and family</p>
+      </div>
+      <div class="feature-item">
+        <i class="fa fa-share-alt"></i>
+        <p>Share what's new in your life</p>
+      </div>
+      <div class="feature-item">
+        <i class="fa fa-comment"></i>
+        <p>Discover communities you love</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <img src="assets/images/logo.png" alt="Aley Logo" class="logo" />
+        <h1>Aley</h1>
+        <p>Join Aley to connect with friends and share your moments.</p>
+      </div>
+
+      <div class="auth-tabs">
+        <div class="tab-header">
+          <button class="tab-btn" (click)="router.navigate(['/auth/login'])">Login</button>
+          <button class="tab-btn active">Register</button>
+        </div>
+
+        <div class="tab-content">
+          <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input 
+                  type="text" 
+                  id="firstName" 
+                  formControlName="firstName" 
+                  class="form-control"
+                  [ngClass]="{ 'is-invalid': submitted && f['firstName'].errors }" 
+                  placeholder="Your first name"
+                />
+                <div *ngIf="submitted && f['firstName'].errors" class="invalid-feedback">
+                  <div *ngIf="f['firstName'].errors['required']">First name is required</div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input 
+                  type="text" 
+                  id="lastName" 
+                  formControlName="lastName" 
+                  class="form-control"
+                  [ngClass]="{ 'is-invalid': submitted && f['lastName'].errors }" 
+                  placeholder="Your last name"
+                />
+                <div *ngIf="submitted && f['lastName'].errors" class="invalid-feedback">
+                  <div *ngIf="f['lastName'].errors['required']">Last name is required</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input 
+                type="email" 
+                id="email" 
+                formControlName="email" 
+                class="form-control"
+                [ngClass]="{ 'is-invalid': submitted && f['email'].errors }" 
+                placeholder="Your email address"
+              />
+              <div *ngIf="submitted && f['email'].errors" class="invalid-feedback">
+                <div *ngIf="f['email'].errors['required']">Email is required</div>
+                <div *ngIf="f['email'].errors['email']">Please enter a valid email address</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input 
+                type="password" 
+                id="password" 
+                formControlName="password" 
+                class="form-control"
+                [ngClass]="{ 'is-invalid': submitted && f['password'].errors }" 
+                placeholder="Create a password"
+              />
+              <div *ngIf="submitted && f['password'].errors" class="invalid-feedback">
+                <div *ngIf="f['password'].errors['required']">Password is required</div>
+                <div *ngIf="f['password'].errors['minlength']">Password must be at least 6 characters</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword">Confirm Password</label>
+              <input 
+                type="password" 
+                id="confirmPassword" 
+                formControlName="confirmPassword" 
+                class="form-control"
+                [ngClass]="{ 'is-invalid': submitted && f['confirmPassword'].errors }" 
+                placeholder="Confirm your password"
+              />
+              <div *ngIf="submitted && f['confirmPassword'].errors" class="invalid-feedback">
+                <div *ngIf="f['confirmPassword'].errors['required']">Please confirm your password</div>
+                <div *ngIf="f['confirmPassword'].errors['mustMatch']">Passwords must match</div>
+              </div>
+            </div>
+
+            <div class="form-group checkbox-group">
+              <div class="checkbox-container">
+                <input type="checkbox" id="agreeTerms" formControlName="agreeTerms">
+                <label for="agreeTerms" class="checkbox-label">
+                  I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                </label>
+              </div>
+              <div *ngIf="submitted && f['agreeTerms'].errors" class="invalid-feedback">
+                <div *ngIf="f['agreeTerms'].errors['required']">You must accept the terms and conditions</div>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-register">Create Account</button>
+
+            <div class="separator">or</div>
+
+            <button type="button" class="btn-social">
+              <i class="fa fa-google"></i> Continue with Google
+            </button>
+
+            <button type="button" class="btn-social">
+              <i class="fa fa-facebook"></i> Continue with Facebook
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="auth-footer">
+        <p>Already have an account? <a [routerLink]="['/auth/login']">Log in</a></p>
+      </div>
+    </div>
+  </div>
+</div> 

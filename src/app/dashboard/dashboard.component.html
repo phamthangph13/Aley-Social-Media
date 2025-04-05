@@ -1,0 +1,48 @@
+<div class="dashboard-container">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <img src="assets/images/logo.png" alt="Aley Logo" class="rounded-logo" />
+      <h1>Aley</h1>
+    </div>
+    
+    <nav class="sidebar-menu">
+      <a [routerLink]="['/dashboard/home']" routerLinkActive="active" class="menu-item">
+        <i class="fa fa-home"></i>
+        <span>Trang chủ</span>
+      </a>
+      <a [routerLink]="['/dashboard/search']" routerLinkActive="active" class="menu-item">
+        <i class="fa fa-search"></i>
+        <span>Tìm kiếm</span>
+      </a>
+      <a [routerLink]="['/dashboard/friends']" routerLinkActive="active" class="menu-item">
+        <i class="fa fa-users"></i>
+        <span>Bạn bè</span>
+      </a>
+      <a [routerLink]="['/dashboard/messages']" routerLinkActive="active" class="menu-item">
+        <i class="fa fa-comment"></i>
+        <span>Tin nhắn</span>
+      </a>
+      <a [routerLink]="['/dashboard/profile']" routerLinkActive="active" class="menu-item">
+        <i class="fa fa-user"></i>
+        <span>Trang cá nhân</span>
+      </a>
+    </nav>
+  </div>
+  
+  <div class="main-content">
+    <header class="main-header">
+      <div class="user-section" *ngIf="user">
+        <div class="notifications">
+          <i class="fa fa-bell"></i>
+          <span class="notification-badge">3</span>
+        </div>
+        <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
+        <button class="btn-logout" (click)="logout()">Logout</button>
+      </div>
+    </header>
+    
+    <div class="content-area">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div> 

@@ -1,0 +1,71 @@
+<div class="search-container">
+  <div class="search-header">
+    <h2>Tìm kiếm</h2>
+    <div class="search-box">
+      <input 
+        type="text" 
+        class="search-input" 
+        placeholder="Tìm kiếm bạn bè, bài viết hoặc nhóm..." 
+        [(ngModel)]="searchQuery"
+        (keyup.enter)="onSearch()"
+      />
+      <button class="search-button" (click)="onSearch()">
+        <i class="fa fa-search"></i>
+      </button>
+    </div>
+  </div>
+  
+  <div class="search-filters">
+    <button class="filter-button active">Tất cả</button>
+    <button class="filter-button">Người dùng</button>
+    <button class="filter-button">Bài viết</button>
+    <button class="filter-button">Nhóm</button>
+  </div>
+  
+  <div class="search-results">
+    <div class="result-section">
+      <h3>Người dùng</h3>
+      <div class="user-list">
+        <div class="user-card">
+          <img src="assets/images/avatar-placeholder.jpg" alt="User Avatar" class="user-avatar" />
+          <div class="user-info">
+            <h4>Nguyễn Văn A</h4>
+            <p>5 bạn chung</p>
+          </div>
+          <button class="add-friend-btn">
+            <i class="fa fa-user-plus"></i> Kết bạn
+          </button>
+        </div>
+        
+        <div class="user-card">
+          <img src="assets/images/avatar-placeholder.jpg" alt="User Avatar" class="user-avatar" />
+          <div class="user-info">
+            <h4>Trần Thị B</h4>
+            <p>2 bạn chung</p>
+          </div>
+          <button class="add-friend-btn">
+            <i class="fa fa-user-plus"></i> Kết bạn
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="result-section">
+      <h3>Bài viết</h3>
+      <div class="post-list">
+        <div class="post-card">
+          <div class="post-header">
+            <img src="assets/images/avatar-placeholder.jpg" alt="User Avatar" class="avatar" />
+            <div class="post-info">
+              <h4>Lê Văn C</h4>
+              <span class="post-time">1 ngày trước</span>
+            </div>
+          </div>
+          <div class="post-content">
+            <p>Nội dung bài viết tìm thấy...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

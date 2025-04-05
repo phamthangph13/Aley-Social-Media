@@ -1,0 +1,84 @@
+<div class="messages-container">
+  <div class="conversations-panel">
+    <div class="panel-header">
+      <h2>Tin nhắn</h2>
+    </div>
+    
+    <div class="conversations-list">
+      <div 
+        class="conversation-item" 
+        *ngFor="let conversation of conversations"
+        [ngClass]="{'active': selectedConversation.id === conversation.id, 'unread': conversation.unread}"
+        (click)="selectConversation(conversation)"
+      >
+        <div class="avatar-container">
+          <img [src]="conversation.avatar" [alt]="conversation.name" class="avatar" />
+          <span class="status-indicator" [ngClass]="{'online': conversation.isOnline}"></span>
+        </div>
+        
+        <div class="conversation-info">
+          <div class="conversation-header">
+            <h4>{{ conversation.name }}</h4>
+            <span class="time">{{ conversation.lastMessageTime }}</span>
+          </div>
+          <p class="last-message">{{ conversation.lastMessage }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="chat-panel">
+    <div class="chat-header" *ngIf="selectedConversation">
+      <div class="user-info">
+        <img [src]="selectedConversation.avatar" [alt]="selectedConversation.name" class="avatar" />
+        <div>
+          <h3>{{ selectedConversation.name }}</h3>
+          <span class="status" [ngClass]="{'online': selectedConversation.isOnline}">
+            {{ selectedConversation.isOnline ? 'Đang hoạt động' : 'Không hoạt động' }}
+          </span>
+        </div>
+      </div>
+      
+      <div class="chat-actions">
+        <button class="action-btn">
+          <i class="fa fa-phone"></i>
+        </button>
+        <button class="action-btn">
+          <i class="fa fa-video-camera"></i>
+        </button>
+        <button class="action-btn">
+          <i class="fa fa-info-circle"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="chat-messages">
+      <div 
+        *ngFor="let message of messages" 
+        class="message" 
+        [ngClass]="{'outgoing': message.isOutgoing, 'incoming': !message.isOutgoing}"
+      >
+        <div class="message-content">
+          <p>{{ message.text }}</p>
+          <span class="message-time">{{ message.time }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="chat-input">
+      <button class="attachment-btn">
+        <i class="fa fa-paperclip"></i>
+      </button>
+      <input 
+        type="text" 
+        class="message-input" 
+        placeholder="Nhập tin nhắn..." 
+        [(ngModel)]="newMessage"
+        (keyup.enter)="sendMessage()"
+      />
+      <button class="send-btn" [disabled]="newMessage.trim() === ''" (click)="sendMessage()">
+        <i class="fa fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div> 

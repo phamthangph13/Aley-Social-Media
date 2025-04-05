@@ -1,0 +1,37 @@
+<div class="verify-email-container">
+  <div class="verify-email-card">
+    <img src="assets/images/logo.png" alt="Aley Logo" class="logo" />
+    <h1>Email Verification</h1>
+    
+    <div *ngIf="loading" class="verification-status">
+      <div class="spinner"></div>
+      <p>Verifying your email...</p>
+    </div>
+    
+    <div *ngIf="verified" class="verification-status success">
+      <i class="fa fa-check-circle"></i>
+      <h2>Email Verified Successfully!</h2>
+      <p>Your email has been verified. You'll be redirected to your dashboard shortly.</p>
+      <a [routerLink]="['/dashboard']" class="btn-primary">Go to Dashboard</a>
+    </div>
+    
+    <div *ngIf="error" class="verification-status error">
+      <i class="fa fa-times-circle"></i>
+      <h2>Verification Failed</h2>
+      <p>{{ error }}</p>
+      <div class="actions">
+        <a [routerLink]="['/auth/login']" class="btn-secondary">Back to Login</a>
+        <button class="btn-primary" (click)="verifyEmail()" [disabled]="loading">Try Again</button>
+      </div>
+    </div>
+    
+    <div *ngIf="!loading && !verified && !error && !token" class="verification-status warning">
+      <i class="fa fa-exclamation-circle"></i>
+      <h2>No Verification Token Found</h2>
+      <p>The link you followed may be invalid or expired. Please check your email for the correct verification link.</p>
+      <div class="actions">
+        <a [routerLink]="['/auth/login']" class="btn-secondary">Back to Login</a>
+      </div>
+    </div>
+  </div>
+</div> 

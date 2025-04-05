@@ -1,0 +1,62 @@
+<div class="friends-container">
+  <div class="header-section">
+    <h2>Bạn bè</h2>
+  </div>
+  
+  <div class="friend-section">
+    <div class="section-header">
+      <h3>Lời mời kết bạn</h3>
+      <span class="badge" *ngIf="friendRequests.length > 0">{{ friendRequests.length }}</span>
+    </div>
+    
+    <div class="friend-requests" *ngIf="friendRequests.length > 0">
+      <div class="friend-card" *ngFor="let request of friendRequests">
+        <img [src]="request.avatar" alt="{{ request.name }}" class="friend-avatar" />
+        <div class="friend-info">
+          <h4>{{ request.name }}</h4>
+          <p>{{ request.mutualFriends }} bạn chung</p>
+        </div>
+        <div class="friend-actions">
+          <button class="btn-accept" (click)="acceptRequest(request.id)">Chấp nhận</button>
+          <button class="btn-reject" (click)="rejectRequest(request.id)">Từ chối</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="empty-state" *ngIf="friendRequests.length === 0">
+      <i class="fa fa-user-plus empty-icon"></i>
+      <p>Không có lời mời kết bạn nào</p>
+    </div>
+  </div>
+  
+  <div class="friend-section">
+    <div class="section-header">
+      <h3>Tất cả bạn bè</h3>
+      <span class="friend-count">{{ friendsList.length }}</span>
+    </div>
+    
+    <div class="friends-list">
+      <div class="friend-card" *ngFor="let friend of friendsList">
+        <div class="friend-avatar-container">
+          <img [src]="friend.avatar" alt="{{ friend.name }}" class="friend-avatar" />
+          <span class="status-indicator" [ngClass]="{'online': friend.isOnline}"></span>
+        </div>
+        <div class="friend-info">
+          <h4>{{ friend.name }}</h4>
+          <p>{{ friend.isOnline ? 'Đang hoạt động' : 'Không hoạt động' }}</p>
+        </div>
+        <div class="friend-actions">
+          <button class="btn-message">
+            <i class="fa fa-comment"></i> Nhắn tin
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="empty-state" *ngIf="friendsList.length === 0">
+      <i class="fa fa-users empty-icon"></i>
+      <p>Chưa có bạn bè nào</p>
+      <button class="btn-find-friends">Tìm bạn bè</button>
+    </div>
+  </div>
+</div> 
