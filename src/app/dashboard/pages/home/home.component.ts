@@ -8,6 +8,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { environment } from '../../../../environments/environment';
+import { ProfileNavigatorService } from '../../../services/profile-navigator.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home',
@@ -43,11 +45,16 @@ export class HomeComponent implements OnInit {
     { value: 'private', label: 'Chỉ mình tôi', icon: 'fa-lock' }
   ];
 
+  // Cache timestamp cho URLs
+  private timestampCache = new Date().getTime();
+
   constructor(
     private postService: PostService,
     private authService: AuthService,
     private fb: FormBuilder,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private profileNavigator: ProfileNavigatorService,
+    private router: Router
   ) {
     this.postForm = this.fb.group({
       content: ['', [Validators.required]],
@@ -317,8 +324,34 @@ export class HomeComponent implements OnInit {
   }
 
   getAvatarUrl(userId: string): string {
-    // Add a cache-busting query parameter to avoid browser caching
-    const timestamp = new Date().getTime();
-    return `${environment.apiUrl}/profile/${userId}/avatar?t=${timestamp}`;
+    // Sử dụng timestamp cache thay vì tạo mới
+    return `${environment.apiUrl}/profile/${userId}/avatar?t=${this.timestampCache}`;
+  }
+
+  // Chuyển hướng đến profile người dùng
+  navigateToProfile(userId: string): void {
+    if (!userId) return;
+    
+    // Add debug logging
+    console.log('Home navigateToProfile:', {
+      userId,
+      currentUserId: this.currentUser?._id || this.currentUser?.id,
+      isEqual: String(userId) === String(this.currentUser?._id || this.currentUser?.id)
+    });
+    
+    // Ensure we check if this is current user with normalized string comparison
+    if (this.currentUser && (String(userId) === String(this.currentUser._id) || String(userId) === String(this.currentUser.id))) {
+      console.log('Home: Navigating to own profile');
+      this.router.navigate(['/dashboard/profile']);
+    } else {
+      // Fallback to the service which should handle this correctly
+      this.profileNavigator.navigateToProfile(userId);
+    }
+  }
+  
+  // Kiểm tra xem có phải người dùng hiện tại không
+  isCurrentUser(userId: string): boolean {
+    if (!userId) return false;
+    return this.profileNavigator.isCurrentUser(userId);
   }
 } 

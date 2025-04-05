@@ -286,7 +286,7 @@ const resetPassword = async (req, res) => {
 };
 
 /**
- * Get current user data
+ * @desc    Get current user profile
  * @route GET /api/auth/me
  */
 const getMe = async (req, res) => {
@@ -303,7 +303,8 @@ const getMe = async (req, res) => {
     res.status(200).json({
       success: true,
       user: {
-        id: user._id,
+        _id: user._id.toString(), // Ensuring ID is in string format
+        id: user._id, // Keep this for backward compatibility
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
@@ -401,12 +402,20 @@ const getCurrentUser = async (req, res) => {
       });
     }
     
-    // Format user data for response
-    const userData = user.getPublicProfile ? user.getPublicProfile() : user.toObject();
+    // Format user data for response, ensuring _id is included and in the correct format
+    const userData = {
+      _id: user._id.toString(), // Ensuring ID is in string format
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      isVerified: user.isVerified,
+      // Other user fields as needed
+      ...user.getPublicProfile ? user.getPublicProfile() : user.toObject()
+    };
     
     res.json({
       success: true,
-      data: userData
+      user: userData
     });
   } catch (error) {
     console.error('Error fetching current user:', error);

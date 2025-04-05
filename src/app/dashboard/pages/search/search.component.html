@@ -56,9 +56,10 @@
       <h3>Người dùng</h3>
       <div class="user-list">
         <div class="user-card" *ngFor="let user of users">
-          <img [src]="user.avatarUrl || 'assets/images/avatar-placeholder.jpg'" alt="User Avatar" class="user-avatar" />
+          <img [src]="getAvatarUrl(user._id)" alt="User Avatar" class="user-avatar" 
+               (click)="navigateToProfile(user._id)" />
           <div class="user-info">
-            <h4>{{ user.firstName }} {{ user.lastName }}</h4>
+            <h4 (click)="navigateToProfile(user._id)" class="username-link">{{ user.firstName }} {{ user.lastName }}</h4>
             <p *ngIf="user.commonFriendsCount > 0">{{ user.commonFriendsCount }} bạn chung</p>
             <p *ngIf="user.location">{{ user.location }}</p>
           </div>
@@ -94,9 +95,12 @@
       <div class="post-list">
         <div class="post-card" *ngFor="let post of posts">
           <div class="post-header">
-            <img [src]="post.user?.avatarUrl || 'assets/images/avatar-placeholder.jpg'" alt="User Avatar" class="avatar" />
+            <img [src]="getAvatarUrl(post.user?._id)" alt="User Avatar" class="avatar" 
+                 (click)="navigateToProfile(post.user?._id)" />
             <div class="post-info">
-              <h4>{{ post.user?.firstName }} {{ post.user?.lastName }}</h4>
+              <h4 (click)="navigateToProfile(post.user?._id)" class="user-name">
+                {{ post.user?.firstName }} {{ post.user?.lastName }}
+              </h4>
               <span class="post-time">{{ post.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
             </div>
           </div>

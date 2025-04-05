@@ -70,6 +70,12 @@
   border-radius: 50%;
   margin-right: 15px;
   object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.friend-avatar:hover {
+  transform: scale(1.05);
 }
 
 .friend-avatar-container {
@@ -262,4 +268,15 @@
 .error-message i {
   margin-right: 8px;
   font-size: 16px;
+}
+
+.profile-link {
+  cursor: pointer;
+  color: #3498db;
+  transition: color 0.2s;
+}
+
+.profile-link:hover {
+  color: #2980b9;
+  text-decoration: underline;
 } 

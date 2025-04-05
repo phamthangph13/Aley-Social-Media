@@ -99,6 +99,12 @@
   border-radius: 50%;
   object-fit: cover;
   margin-right: 15px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.user-avatar:hover {
+  transform: scale(1.05);
 }
 
 .user-info {
@@ -195,6 +201,12 @@
   border-radius: 50%;
   object-fit: cover;
   margin-right: 10px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.avatar:hover {
+  transform: scale(1.05);
 }
 
 .post-info h4 {
@@ -277,6 +289,17 @@
   color: #65676b;
   font-size: 16px;
   margin: 0;
+}
+
+.username-link {
+  cursor: pointer;
+  color: #3498db;
+  transition: color 0.2s;
+}
+
+.username-link:hover {
+  color: #2980b9;
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {

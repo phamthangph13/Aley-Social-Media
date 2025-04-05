@@ -4,13 +4,18 @@ import { FormsModule } from '@angular/forms';
 import { SearchService } from '../../../services/search.service';
 import { FriendsService } from '../../../services/friends.service';
 import { DatePipe } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { ProfileNavigatorService } from '../../../services/profile-navigator.service';
+import { environment } from '../../../../environments/environment';
+import { Router } from '@angular/router';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-search',
   templateUrl: './search.component.html',
   styleUrls: ['./search.component.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe]
+  imports: [CommonModule, FormsModule, DatePipe, RouterModule]
 })
 export class SearchComponent implements OnInit {
   searchQuery: string = '';
@@ -19,14 +24,44 @@ export class SearchComponent implements OnInit {
   activeFilter: string = 'all';
   loading: boolean = false;
   searched: boolean = false;
+  currentUser: any = null;
+  
+  // Cache timestamp cho URLs
+  private timestampCache = new Date().getTime();
   
   constructor(
     private searchService: SearchService,
-    private friendsService: FriendsService
+    private friendsService: FriendsService,
+    private profileNavigator: ProfileNavigatorService,
+    private router: Router,
+    private authService: AuthService
   ) { }
   
   ngOnInit(): void {
+    // Load current user data
+    this.authService.currentUser.subscribe(user => {
+      this.currentUser = user;
+    });
+    
     // Component initialization logic
+  }
+  
+  // Chuyển hướng đến profile người dùng
+  navigateToProfile(userId: string): void {
+    if (!userId) return;
+    
+    // Ensure we check if this is current user
+    if (this.currentUser && userId === this.currentUser._id) {
+      this.router.navigate(['/dashboard/profile']);
+    } else {
+      // Fallback to the service which should handle this correctly
+      this.profileNavigator.navigateToProfile(userId);
+    }
+  }
+  
+  // Kiểm tra xem có phải người dùng hiện tại không
+  isCurrentUser(userId: string): boolean {
+    return this.profileNavigator.isCurrentUser(userId);
   }
   
   onSearch() {
@@ -189,5 +224,11 @@ export class SearchComponent implements OnInit {
           action: () => this.sendFriendRequest(user._id)
         };
     }
+  }
+  
+  // Lấy URL avatar với timestamp cache
+  getAvatarUrl(userId: string): string {
+    if (!userId) return 'assets/images/default-avatar.png';
+    return `${environment.apiUrl}/profile/${userId}/avatar?t=${this.timestampCache}`;
   }
 } 

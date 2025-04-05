@@ -19,9 +19,12 @@
       <div class="friend-card" *ngFor="let request of friendRequests">
         <img [src]="getAvatarUrl(request.from._id)" 
              [alt]="getFullName(request.from.firstName, request.from.lastName)" 
-             class="friend-avatar" />
+             class="friend-avatar"
+             (click)="navigateToProfile(request.from._id)" />
         <div class="friend-info">
-          <h4>{{ getFullName(request.from.firstName, request.from.lastName) }}</h4>
+          <h4 (click)="navigateToProfile(request.from._id)" class="profile-link">
+            {{ getFullName(request.from.firstName, request.from.lastName) }}
+          </h4>
           <p *ngIf="request.from.mutualFriendsCount">{{ request.from.mutualFriendsCount }} bạn chung</p>
         </div>
         <div class="friend-actions">
@@ -58,9 +61,12 @@
       <div class="friend-card" *ngFor="let suggestion of friendSuggestions">
         <img [src]="getAvatarUrl(suggestion._id)" 
              [alt]="getFullName(suggestion.firstName, suggestion.lastName)" 
-             class="friend-avatar" />
+             class="friend-avatar"
+             (click)="navigateToProfile(suggestion._id)" />
         <div class="friend-info">
-          <h4>{{ getFullName(suggestion.firstName, suggestion.lastName) }}</h4>
+          <h4 (click)="navigateToProfile(suggestion._id)" class="profile-link">
+            {{ getFullName(suggestion.firstName, suggestion.lastName) }}
+          </h4>
           <p *ngIf="suggestion.mutualFriendsCount">{{ suggestion.mutualFriendsCount }} bạn chung</p>
           <p *ngIf="suggestion.commonInterestsCount">{{ suggestion.commonInterestsCount }} sở thích chung</p>
         </div>
@@ -104,11 +110,14 @@
         <div class="friend-avatar-container">
           <img [src]="getAvatarUrl(friend._id)" 
                [alt]="getFullName(friend.firstName, friend.lastName)" 
-               class="friend-avatar" />
+               class="friend-avatar"
+               (click)="navigateToProfile(friend._id)" />
           <span class="status-indicator" [ngClass]="{'online': friend.isOnline}"></span>
         </div>
         <div class="friend-info">
-          <h4>{{ getFullName(friend.firstName, friend.lastName) }}</h4>
+          <h4 (click)="navigateToProfile(friend._id)" class="profile-link">
+            {{ getFullName(friend.firstName, friend.lastName) }}
+          </h4>
           <p>{{ friend.isOnline ? 'Đang hoạt động' : 'Không hoạt động' }}</p>
         </div>
         <div class="friend-actions">

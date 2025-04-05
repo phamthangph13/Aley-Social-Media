@@ -18,7 +18,12 @@ export class FriendsService {
 
   // Get friend requests
   getFriendRequests(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/requests`);
+    return this.http.get(`${this.apiUrl}/requests`).pipe(
+      catchError(error => {
+        console.error('Error fetching friend requests:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Get friend suggestions

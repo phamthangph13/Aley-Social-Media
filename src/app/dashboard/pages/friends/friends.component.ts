@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { FriendsService } from '../../../services/friends.service';
 import { environment } from '../../../../environments/environment';
+import { ProfileNavigatorService } from '../../../services/profile-navigator.service';
+import { AuthService } from '../../../services/auth.service';
 
 interface Friend {
   _id: string;
@@ -40,6 +42,7 @@ export class FriendsComponent implements OnInit {
   friendsList: Friend[] = [];
   friendSuggestions: Friend[] = [];
   sentRequests: string[] = []; // IDs of users to whom we've sent requests
+  currentUser: any = null;
   isLoading = {
     friends: false,
     requests: false,
@@ -47,9 +50,22 @@ export class FriendsComponent implements OnInit {
   };
   errorMessage: string | null = null;
   
-  constructor(private friendsService: FriendsService) { }
+  // Cache timestamp cho URLs
+  private timestampCache = new Date().getTime();
+  
+  constructor(
+    private friendsService: FriendsService,
+    private profileNavigator: ProfileNavigatorService,
+    private router: Router,
+    private authService: AuthService
+  ) { }
   
   ngOnInit(): void {
+    // Load current user data
+    this.authService.currentUser.subscribe(user => {
+      this.currentUser = user;
+    });
+    
     this.loadFriends();
     this.loadFriendRequests();
     this.loadSentRequests();
@@ -57,9 +73,8 @@ export class FriendsComponent implements OnInit {
   }
   
   getAvatarUrl(userId: string): string {
-    // Add a cache-busting query parameter to avoid browser caching
-    const timestamp = new Date().getTime();
-    return `${environment.apiUrl}/profile/${userId}/avatar?t=${timestamp}`;
+    // Sử dụng timestamp cache thay vì tạo mới
+    return `${environment.apiUrl}/profile/${userId}/avatar?t=${this.timestampCache}`;
   }
   
   getFullName(firstName: string, lastName: string): string {
@@ -281,5 +296,23 @@ export class FriendsComponent implements OnInit {
         console.error('Error removing friend', error);
       }
     });
+  }
+  
+  // Chuyển hướng đến profile người dùng
+  navigateToProfile(userId: string): void {
+    if (!userId) return;
+    
+    // Ensure we check if this is current user
+    if (this.currentUser && userId === this.currentUser._id) {
+      this.router.navigate(['/dashboard/profile']);
+    } else {
+      // Fallback to the service which should handle this correctly
+      this.profileNavigator.navigateToProfile(userId);
+    }
+  }
+  
+  // Kiểm tra xem có phải người dùng hiện tại không
+  isCurrentUser(userId: string): boolean {
+    return this.profileNavigator.isCurrentUser(userId);
   }
 } 

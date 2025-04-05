@@ -470,6 +470,26 @@
   margin-left: 5px;
 }
 
+/* Profile links styling */
+.user-name, .commenter-name {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.user-name:hover, .commenter-name:hover {
+  color: #3498db;
+  text-decoration: underline;
+}
+
+.avatar, .comment-avatar {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.avatar:hover, .comment-avatar:hover {
+  transform: scale(1.05);
+}
+
 @media (max-width: 768px) {
   .home-container {
     padding: 10px;

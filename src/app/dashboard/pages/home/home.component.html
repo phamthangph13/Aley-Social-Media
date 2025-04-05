@@ -104,9 +104,14 @@
     <div class="post-list">
       <div *ngFor="let post of posts" class="post-card">
         <div class="post-header">
-          <img [src]="getAvatarUrl(post.user._id)" alt="User Avatar" class="avatar" />
+          <img [src]="getAvatarUrl(post.user._id)" 
+               alt="User Avatar" 
+               class="avatar"
+               (click)="navigateToProfile(post.user._id)" />
           <div class="post-info">
-            <h4>{{ post.user.firstName }} {{ post.user.lastName }}</h4>
+            <h4 (click)="navigateToProfile(post.user._id)" class="user-name">
+              {{ post.user.firstName }} {{ post.user.lastName }}
+            </h4>
             <div class="post-meta">
               <span class="post-time">{{ formatTimeAgo(post.createdAt) }}</span>
               <span class="post-privacy">
@@ -171,10 +176,15 @@
         <div *ngIf="post.showComments" class="comments-section">
           <div class="comments-list">
             <div *ngFor="let comment of post.comments" class="comment">
-              <img [src]="getAvatarUrl(comment.user._id)" alt="Commenter" class="comment-avatar">
+              <img [src]="getAvatarUrl(comment.user._id)" 
+                   alt="Commenter" 
+                   class="comment-avatar"
+                   (click)="navigateToProfile(comment.user._id)" />
               <div class="comment-content">
                 <div class="comment-header">
-                  <span class="commenter-name">{{ comment.user.firstName }} {{ comment.user.lastName }}</span>
+                  <span (click)="navigateToProfile(comment.user._id)" class="commenter-name">
+                    {{ comment.user.firstName }} {{ comment.user.lastName }}
+                  </span>
                   <span class="comment-time">{{ formatTimeAgo(comment.createdAt) }}</span>
                 </div>
                 <p class="comment-text">{{ comment.text }}</p>

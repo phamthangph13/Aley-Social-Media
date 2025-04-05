@@ -1,0 +1,104 @@
+<div class="profile-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Đang tải thông tin...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-container">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Profile Content -->
+  <div *ngIf="!isLoading && !error && userProfile" class="profile-content">
+    <!-- Cover Image Section -->
+    <div class="cover-image-container">
+      <img [src]="getCoverImageUrl(userProfile._id)" alt="Cover Image" class="cover-image">
+    </div>
+
+    <!-- Profile Info Section -->
+    <div class="profile-info-section">
+      <div class="avatar-container">
+        <img [src]="getAvatarUrl(userProfile._id)" alt="Profile Avatar" class="profile-avatar">
+      </div>
+
+      <div class="profile-details">
+        <h1 class="profile-name">{{ userProfile.firstName }} {{ userProfile.lastName }}</h1>
+        
+        <!-- Friend Status / Add Friend Button -->
+        <div class="friend-status">
+          <!-- Nếu là bạn bè -->
+          <div *ngIf="isFriend" class="friend-badge">
+            <i class="fas fa-user-check"></i> Bạn bè
+            <button class="btn-unfriend" (click)="removeFriend()">
+              <i class="fas fa-user-times"></i> Hủy kết bạn
+            </button>
+          </div>
+          
+          <!-- Nếu chưa phải bạn bè và chưa có lời mời nào -->
+          <button *ngIf="!isFriend && !hasPendingRequest && !hasReceivedRequest" 
+                  (click)="sendFriendRequest()" 
+                  class="add-friend-btn">
+            <i class="fas fa-user-plus"></i> Kết bạn
+          </button>
+          
+          <!-- Đã gửi lời mời kết bạn -->
+          <div *ngIf="!isFriend && hasPendingRequest" class="pending-badge">
+            <i class="fas fa-clock"></i> Đã gửi lời mời
+            <button class="btn-cancel" (click)="cancelFriendRequest()">
+              <i class="fas fa-times"></i> Hủy
+            </button>
+          </div>
+          
+          <!-- Đã nhận lời mời kết bạn -->
+          <div *ngIf="!isFriend && hasReceivedRequest" class="received-badge">
+            <span>Đã nhận lời mời kết bạn</span>
+            <div *ngIf="!pendingRequestId" class="friend-error">
+              <p>Không thể tải ID lời mời kết bạn. Vui lòng làm mới trang.</p>
+            </div>
+            <div *ngIf="pendingRequestId" class="friend-actions">
+              <button class="btn-accept" (click)="acceptFriendRequest()">
+                <i class="fas fa-check"></i> Chấp nhận
+              </button>
+              <button class="btn-reject" (click)="rejectFriendRequest()">
+                <i class="fas fa-times"></i> Từ chối
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bio and Details -->
+    <div class="profile-bio-container">
+      <div class="section-card bio-section">
+        <h3 class="section-title">Giới thiệu</h3>
+        <p *ngIf="userProfile.bio" class="bio-text">{{ userProfile.bio }}</p>
+        <p *ngIf="!userProfile.bio" class="empty-section">Chưa có thông tin</p>
+        
+        <div class="profile-details-list">
+          <div *ngIf="userProfile.location" class="detail-item">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>{{ userProfile.location }}</span>
+          </div>
+          
+          <div *ngIf="userProfile.website" class="detail-item">
+            <i class="fas fa-link"></i>
+            <a [href]="userProfile.website" target="_blank" rel="noopener noreferrer">{{ userProfile.website }}</a>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Interests Section -->
+      <div *ngIf="userProfile.interests && userProfile.interests.length > 0" class="section-card interests-section">
+        <h3 class="section-title">Sở thích</h3>
+        <div class="interests-list">
+          <span *ngFor="let interest of userProfile.interests" class="interest-tag">
+            {{ interest }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 
