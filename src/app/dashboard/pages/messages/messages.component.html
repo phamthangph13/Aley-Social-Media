@@ -2,13 +2,16 @@
   <div class="conversations-panel">
     <div class="panel-header">
       <h2>Tin nhắn</h2>
+      <button class="new-conversation-btn" (click)="openNewConversationModal()">
+        <i class="fa fa-plus"></i> Cuộc trò chuyện mới
+      </button>
     </div>
     
-    <div class="conversations-list">
+    <div class="conversations-list" *ngIf="!loading">
       <div 
         class="conversation-item" 
         *ngFor="let conversation of conversations"
-        [ngClass]="{'active': selectedConversation.id === conversation.id, 'unread': conversation.unread}"
+        [ngClass]="{'active': selectedConversation?.id === conversation.id, 'unread': conversation.unread}"
         (click)="selectConversation(conversation)"
       >
         <div class="avatar-container">
@@ -24,11 +27,21 @@
           <p class="last-message">{{ conversation.lastMessage }}</p>
         </div>
       </div>
+      
+      <div class="empty-state" *ngIf="conversations.length === 0">
+        <p>Bạn chưa có cuộc trò chuyện nào</p>
+        <button class="btn-primary" (click)="openNewConversationModal()">Bắt đầu cuộc trò chuyện</button>
+      </div>
+    </div>
+    
+    <div class="loading-spinner" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Đang tải...</p>
     </div>
   </div>
   
-  <div class="chat-panel">
-    <div class="chat-header" *ngIf="selectedConversation">
+  <div class="chat-panel" *ngIf="selectedConversation">
+    <div class="chat-header">
       <div class="user-info">
         <img [src]="selectedConversation.avatar" [alt]="selectedConversation.name" class="avatar" />
         <div>
@@ -52,17 +65,26 @@
       </div>
     </div>
     
-    <div class="chat-messages">
+    <div class="chat-messages" *ngIf="!loading">
       <div 
         *ngFor="let message of messages" 
         class="message" 
-        [ngClass]="{'outgoing': message.isOutgoing, 'incoming': !message.isOutgoing}"
+        [ngClass]="{'outgoing': message.isOutgoing === true, 'incoming': message.isOutgoing !== true}"
       >
         <div class="message-content">
           <p>{{ message.text }}</p>
           <span class="message-time">{{ message.time }}</span>
         </div>
       </div>
+      
+      <div class="empty-chat" *ngIf="messages.length === 0">
+        <p>Chưa có tin nhắn nào. Hãy bắt đầu cuộc trò chuyện!</p>
+      </div>
+    </div>
+    
+    <div class="loading-messages" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Đang tải tin nhắn...</p>
     </div>
     
     <div class="chat-input">
@@ -75,9 +97,74 @@
         placeholder="Nhập tin nhắn..." 
         [(ngModel)]="newMessage"
         (keyup.enter)="sendMessage()"
+        [disabled]="sendingMessage"
       />
-      <button class="send-btn" [disabled]="newMessage.trim() === ''" (click)="sendMessage()">
-        <i class="fa fa-paper-plane"></i>
+      <button class="send-btn" [disabled]="newMessage.trim() === '' || sendingMessage" (click)="sendMessage()">
+        <i class="fa" [ngClass]="sendingMessage ? 'fa-circle-o-notch fa-spin' : 'fa-paper-plane'"></i>
+      </button>
+    </div>
+  </div>
+  
+  <div class="empty-selection" *ngIf="!selectedConversation && !loading">
+    <div class="empty-state-content">
+      <i class="fa fa-comments-o fa-4x"></i>
+      <h3>Chọn một cuộc trò chuyện để bắt đầu</h3>
+      <p>Hoặc tạo một cuộc trò chuyện mới</p>
+      <button class="btn-primary" (click)="openNewConversationModal()">Cuộc trò chuyện mới</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal cuộc trò chuyện mới -->
+<div class="modal-overlay" *ngIf="showNewConversationModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h3>Cuộc trò chuyện mới</h3>
+      <button class="close-btn" (click)="closeNewConversationModal()">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="search-container">
+        <input type="text" placeholder="Tìm bạn bè..." class="search-input" />
+      </div>
+      
+      <div class="friends-list">
+        <div 
+          *ngFor="let friend of potentialRecipients" 
+          class="friend-item"
+          [ngClass]="{'selected': selectedRecipient?.id === friend.id}"
+          (click)="selectRecipient(friend)"
+        >
+          <img [src]="friend.avatar" [alt]="friend.name" class="friend-avatar" />
+          <span class="friend-name">{{ friend.name }}</span>
+        </div>
+        
+        <div class="empty-friends" *ngIf="potentialRecipients.length === 0">
+          <p>Không tìm thấy bạn bè nào</p>
+        </div>
+      </div>
+      
+      <div class="message-compose" *ngIf="selectedRecipient">
+        <h4>Gửi đến: {{ selectedRecipient.name }}</h4>
+        <textarea 
+          class="compose-textarea" 
+          placeholder="Nhập tin nhắn..."
+          [(ngModel)]="newConversationMessage"
+        ></textarea>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn-cancel" (click)="closeNewConversationModal()">Hủy</button>
+      <button 
+        class="btn-primary" 
+        [disabled]="!selectedRecipient || newConversationMessage.trim() === '' || sendingMessage"
+        (click)="createNewConversation()"
+      >
+        <i class="fa" [ngClass]="sendingMessage ? 'fa-circle-o-notch fa-spin' : 'fa-paper-plane'"></i>
+        Gửi
       </button>
     </div>
   </div>

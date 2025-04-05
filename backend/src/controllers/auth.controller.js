@@ -385,6 +385,38 @@ const resendVerification = async (req, res) => {
   }
 };
 
+// Get current user information
+const getCurrentUser = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Find user excluding sensitive information
+    const user = await User.findById(userId)
+      .select('-password -verificationToken -verificationTokenExpires -resetPasswordToken -resetPasswordExpires');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy người dùng'
+      });
+    }
+    
+    // Format user data for response
+    const userData = user.getPublicProfile ? user.getPublicProfile() : user.toObject();
+    
+    res.json({
+      success: true,
+      data: userData
+    });
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Lỗi server khi tải thông tin người dùng'
+    });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -392,5 +424,6 @@ module.exports = {
   forgotPassword,
   resetPassword,
   getMe,
-  resendVerification
+  resendVerification,
+  getCurrentUser
 }; 

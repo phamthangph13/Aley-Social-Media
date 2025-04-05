@@ -52,4 +52,7 @@ router.post('/resend-verification', authController.resendVerification);
  */
 router.get('/me', authMiddleware, authController.getMe);
 
+// Add route for getting current user info
+router.get('/current-user', authMiddleware, authController.getCurrentUser);
+
 module.exports = router; 
