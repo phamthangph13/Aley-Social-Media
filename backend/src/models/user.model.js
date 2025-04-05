@@ -81,7 +81,31 @@ const userSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  friends: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  friendRequests: [{
+    from: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  sentFriendRequests: [{
+    to: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true
 });
@@ -135,11 +159,23 @@ userSchema.methods.getPublicProfile = function() {
   delete userObject.verificationTokenExpires;
   delete userObject.resetPasswordToken;
   delete userObject.resetPasswordExpires;
-  delete userObject.email; // Not showing email in public profile
   
-  // Add avatar and cover URLs
-  userObject.avatarUrl = this.avatarUrl;
-  userObject.coverImageUrl = this.coverImageUrl;
+  // Calculate and add avatar and cover URLs
+  if (this.avatar && this.avatarType) {
+    userObject.avatarUrl = `data:${this.avatarType};base64,${this.avatar.toString('base64')}`;
+  } else {
+    userObject.avatarUrl = '/assets/images/default-avatar.png';
+  }
+  
+  if (this.coverImage && this.coverImageType) {
+    userObject.coverImageUrl = `data:${this.coverImageType};base64,${this.coverImage.toString('base64')}`;
+  } else {
+    userObject.coverImageUrl = '/assets/images/default-cover.jpg';
+  }
+  
+  // Remove binary data to reduce response size
+  delete userObject.avatar;
+  delete userObject.coverImage;
   
   return userObject;
 };

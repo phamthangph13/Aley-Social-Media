@@ -1,61 +1,208 @@
 <div class="home-container">
-  <div class="welcome-card">
-    <h2>Trang chủ</h2>
-    <p>Chào mừng bạn đến với Aley!</p>
-    <p>Đây là nơi bạn có thể chia sẻ và kết nối với bạn bè, người thân.</p>
-  </div>
-  
-  <div class="content-section">
-    <h3>Bài viết mới nhất</h3>
-    <div class="post-list">
-      <div class="post-card">
-        <div class="post-header">
-          <img src="assets/images/avatar-placeholder.jpg" alt="User Avatar" class="avatar" />
-          <div class="post-info">
-            <h4>Người dùng 1</h4>
-            <span class="post-time">2 giờ trước</span>
-          </div>
+  <!-- Post Creation Form -->
+  <div class="post-create-card">
+    <h3>Tạo bài viết mới</h3>
+    <form [formGroup]="postForm" (ngSubmit)="submitPost()">
+      <div class="form-group">
+        <textarea 
+          formControlName="content" 
+          placeholder="Bạn đang nghĩ gì?" 
+          rows="3"
+          class="form-control"
+        ></textarea>
+        <div *ngIf="postForm.controls['content'].invalid && postForm.controls['content'].touched" class="error-message">
+          Nội dung không được để trống
         </div>
-        <div class="post-content">
-          <p>Đây là nội dung bài đăng mẫu trên Aley.</p>
+      </div>
+      
+      <div class="form-group">
+        <input 
+          type="text" 
+          formControlName="hashtags" 
+          placeholder="Hashtags (ngăn cách bằng dấu phẩy, ví dụ: #aley, #socialmedia)" 
+          class="form-control"
+        >
+      </div>
+      
+      <div class="post-options">
+        <div class="option-group">
+          <label>Cảm xúc:</label>
+          <select formControlName="emotion" class="form-control">
+            <option *ngFor="let emotion of emotions" [value]="emotion.value">{{ emotion.label }}</option>
+          </select>
         </div>
-        <div class="post-actions">
-          <button class="action-btn">
-            <i class="fa fa-thumbs-up"></i> Thích
-          </button>
-          <button class="action-btn">
-            <i class="fa fa-comment"></i> Bình luận
-          </button>
-          <button class="action-btn">
-            <i class="fa fa-share"></i> Chia sẻ
+        
+        <div class="option-group">
+          <label>Quyền riêng tư:</label>
+          <select formControlName="privacy" class="form-control">
+            <option *ngFor="let option of privacyOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Media upload section -->
+      <div class="media-upload">
+        <label for="media-files" class="btn-upload">
+          <i class="fa fa-image"></i> Thêm ảnh/video
+        </label>
+        <input 
+          type="file" 
+          id="media-files" 
+          multiple 
+          accept="image/*,video/*" 
+          (change)="onFileChange($event)" 
+          style="display: none;"
+        >
+      </div>
+      
+      <!-- Media preview -->
+      <div *ngIf="previewImages.length > 0" class="media-preview">
+        <div *ngFor="let preview of previewImages; let i = index" class="preview-item">
+          <img [src]="preview" alt="Preview">
+          <button type="button" class="remove-btn" (click)="removeFile(i)">
+            <i class="fa fa-times"></i>
           </button>
         </div>
       </div>
       
-      <div class="post-card">
+      <div class="form-actions">
+        <button 
+          type="submit" 
+          class="btn-submit" 
+          [disabled]="postForm.invalid || isLoading"
+        >
+          {{ editingPost ? 'Cập nhật' : 'Đăng' }}
+        </button>
+        
+        <button 
+          *ngIf="editingPost" 
+          type="button" 
+          class="btn-cancel" 
+          (click)="resetForm()"
+        >
+          Hủy
+        </button>
+      </div>
+    </form>
+  </div>
+  
+  <!-- Posts List -->
+  <div class="content-section">
+    <h3>Bài viết mới nhất</h3>
+    
+    <div *ngIf="isLoading" class="loading">
+      <div class="spinner"></div>
+      <p>Đang tải bài viết...</p>
+    </div>
+    
+    <div *ngIf="!isLoading && posts.length === 0" class="no-posts">
+      <p>Chưa có bài viết nào. Hãy là người đầu tiên đăng bài!</p>
+    </div>
+    
+    <div class="post-list">
+      <div *ngFor="let post of posts" class="post-card">
         <div class="post-header">
-          <img src="assets/images/avatar-placeholder.jpg" alt="User Avatar" class="avatar" />
+          <img [src]="getAvatarUrl(post.user._id)" alt="User Avatar" class="avatar" />
           <div class="post-info">
-            <h4>Người dùng 2</h4>
-            <span class="post-time">3 giờ trước</span>
+            <h4>{{ post.user.firstName }} {{ post.user.lastName }}</h4>
+            <div class="post-meta">
+              <span class="post-time">{{ formatTimeAgo(post.createdAt) }}</span>
+              <span class="post-privacy">
+                <i class="fa {{ getPrivacyIcon(post.privacy) }}"></i>
+              </span>
+              <span *ngIf="post.emotion !== 'none'" class="post-emotion">
+                {{ getEmotionEmoji(post.emotion) }}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Post Actions Menu (for owner) -->
+          <div *ngIf="isPostOwner(post)" class="post-actions-menu">
+            <button class="action-btn dropdown-toggle">
+              <i class="fa fa-ellipsis-v"></i>
+            </button>
+            <div class="dropdown-menu">
+              <button class="dropdown-item" (click)="editPost(post)">
+                <i class="fa fa-edit"></i> Chỉnh sửa
+              </button>
+              <button class="dropdown-item" (click)="deletePost(post._id)">
+                <i class="fa fa-trash"></i> Xóa
+              </button>
+            </div>
           </div>
         </div>
+        
         <div class="post-content">
-          <p>Đây là một bài đăng mẫu khác trên Aley.</p>
-          <img src="assets/images/post-image-placeholder.jpg" alt="Post Image" class="post-image" />
+          <p>{{ post.content }}</p>
+          
+          <!-- Hashtags -->
+          <div *ngIf="post.hashtags && post.hashtags.length > 0" class="hashtags">
+            <span *ngFor="let tag of post.hashtags" class="hashtag">{{ tag }}</span>
+          </div>
+          
+          <!-- Images -->
+          <div *ngIf="post.imageUrls && post.imageUrls.length > 0" class="post-images">
+            <img *ngFor="let imageUrl of post.imageUrls" [src]="imageUrl" alt="Post Image" class="post-image">
+          </div>
+          
+          <!-- Videos -->
+          <div *ngIf="post.videoUrls && post.videoUrls.length > 0" class="post-videos">
+            <video *ngFor="let videoUrl of post.videoUrls" [src]="videoUrl" controls class="post-video"></video>
+          </div>
         </div>
+        
+        <div class="post-stats">
+          <span class="likes-count">{{ post.likes.length }} lượt thích</span>
+          <span class="comments-count">{{ post.comments.length }} bình luận</span>
+        </div>
+        
         <div class="post-actions">
-          <button class="action-btn">
-            <i class="fa fa-thumbs-up"></i> Thích
+          <button class="action-btn" [class.active]="post.likes.includes(currentUser?._id)" (click)="toggleLike(post)">
+            <i class="fa" [class.fa-thumbs-up]="true"></i> Thích
           </button>
-          <button class="action-btn">
+          <button class="action-btn" (click)="post.showComments = !post.showComments">
             <i class="fa fa-comment"></i> Bình luận
           </button>
-          <button class="action-btn">
-            <i class="fa fa-share"></i> Chia sẻ
-          </button>
+        </div>
+        
+        <!-- Comments Section -->
+        <div *ngIf="post.showComments" class="comments-section">
+          <div class="comments-list">
+            <div *ngFor="let comment of post.comments" class="comment">
+              <img [src]="getAvatarUrl(comment.user._id)" alt="Commenter" class="comment-avatar">
+              <div class="comment-content">
+                <div class="comment-header">
+                  <span class="commenter-name">{{ comment.user.firstName }} {{ comment.user.lastName }}</span>
+                  <span class="comment-time">{{ formatTimeAgo(comment.createdAt) }}</span>
+                </div>
+                <p class="comment-text">{{ comment.text }}</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Add Comment Form -->
+          <div class="add-comment">
+            <input 
+              #commentInput 
+              type="text" 
+              placeholder="Viết bình luận..." 
+              class="comment-input"
+            >
+            <button class="comment-btn" (click)="addComment(post, commentInput.value); commentInput.value = ''">
+              <i class="fa fa-paper-plane"></i>
+            </button>
+          </div>
         </div>
       </div>
+    </div>
+    
+    <!-- Load More Button -->
+    <div *ngIf="posts.length > 0 && posts.length < totalPosts" class="load-more">
+      <button class="btn-load-more" (click)="loadMorePosts()" [disabled]="isLoading">
+        Tải thêm bài viết
+      </button>
     </div>
   </div>
 </div> 

@@ -208,4 +208,58 @@
     width: 100%;
     justify-content: flex-end;
   }
+}
+
+/* Friend Suggestions */
+.friend-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  color: #666;
+}
+
+.loading-spinner i {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+/* Remove Friend Button */
+.btn-remove {
+  background-color: transparent;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin-left: 5px;
+  transition: color 0.2s;
+}
+
+.btn-remove:hover {
+  color: #f44336;
+}
+
+/* Error Message */
+.error-message {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.error-message i {
+  margin-right: 8px;
+  font-size: 16px;
 } 

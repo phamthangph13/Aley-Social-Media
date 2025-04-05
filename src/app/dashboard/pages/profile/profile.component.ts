@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ProfileService } from '../../../services/profile.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-profile',
@@ -37,6 +38,20 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadProfile();
+  }
+
+  getAvatarUrl(userId: string | undefined): string {
+    if (!userId) return 'assets/images/default-avatar.png';
+    // Add a cache-busting query parameter to avoid browser caching
+    const timestamp = new Date().getTime();
+    return `${environment.apiUrl}/profile/${userId}/avatar?t=${timestamp}`;
+  }
+
+  getCoverImageUrl(userId: string | undefined): string {
+    if (!userId) return 'assets/images/default-cover.jpg';
+    // Add a cache-busting query parameter to avoid browser caching
+    const timestamp = new Date().getTime();
+    return `${environment.apiUrl}/profile/${userId}/cover?t=${timestamp}`;
   }
 
   loadProfile(): void {

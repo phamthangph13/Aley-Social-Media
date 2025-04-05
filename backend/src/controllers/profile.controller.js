@@ -199,4 +199,58 @@ exports.deleteCoverImage = async (req, res) => {
     console.error('Error deleting cover image:', error);
     res.status(500).json({ message: 'Server error' });
   }
+};
+
+/**
+ * @desc    Get user avatar by user ID
+ * @route   GET /api/profile/:userId/avatar
+ * @access  Public
+ */
+exports.getUserAvatar = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).select('avatar avatarType');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // If user has no avatar, return a 404 or redirect to default avatar
+    if (!user.avatar || !user.avatarType) {
+      return res.redirect('/assets/images/default-avatar.png');
+    }
+
+    // Set the content type and send the avatar
+    res.set('Content-Type', user.avatarType);
+    return res.send(user.avatar);
+  } catch (error) {
+    console.error('Error fetching avatar:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+/**
+ * @desc    Get user cover image by user ID
+ * @route   GET /api/profile/:userId/cover
+ * @access  Public
+ */
+exports.getUserCover = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).select('coverImage coverImageType');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // If user has no cover image, return a 404 or redirect to default cover
+    if (!user.coverImage || !user.coverImageType) {
+      return res.redirect('/assets/images/default-cover.jpg');
+    }
+
+    // Set the content type and send the cover image
+    res.set('Content-Type', user.coverImageType);
+    return res.send(user.coverImage);
+  } catch (error) {
+    console.error('Error fetching cover image:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 }; 

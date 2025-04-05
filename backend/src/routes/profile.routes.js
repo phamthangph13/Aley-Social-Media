@@ -19,6 +19,20 @@ router.get('/', authMiddleware, profileController.getProfile);
 router.get('/:userId', profileController.getProfileById);
 
 /**
+ * @route GET /api/profile/:userId/avatar
+ * @desc Get user avatar by user ID
+ * @access Public
+ */
+router.get('/:userId/avatar', profileController.getUserAvatar);
+
+/**
+ * @route GET /api/profile/:userId/cover
+ * @desc Get user cover image by user ID
+ * @access Public
+ */
+router.get('/:userId/cover', profileController.getUserCover);
+
+/**
  * @route PUT /api/profile
  * @desc Update user profile
  * @access Private

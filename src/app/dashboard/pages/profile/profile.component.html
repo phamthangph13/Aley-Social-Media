@@ -7,7 +7,7 @@
 
   <div class="profile-header">
     <div class="profile-cover">
-      <img [src]="profile?.coverImageUrl || 'assets/images/default-cover.jpg'" alt="Cover Photo" class="cover-photo">
+      <img [src]="getCoverImageUrl(profile?._id)" alt="Cover Photo" class="cover-photo">
       <div class="cover-overlay">
         <label class="edit-btn">
           <i class="fa fa-camera"></i>
@@ -19,7 +19,7 @@
       </div>
     </div>
     <div class="profile-avatar">
-      <img [src]="profile?.avatarUrl || 'assets/images/default-avatar.jpg'" alt="Profile Photo" class="avatar-photo">
+      <img [src]="getAvatarUrl(profile?._id)" alt="Profile Photo" class="avatar-photo">
       <div class="avatar-overlay">
         <label class="edit-btn">
           <i class="fa fa-camera"></i>

@@ -3,60 +3,129 @@
     <h2>Bạn bè</h2>
   </div>
   
+  <!-- Friend Requests Section -->
   <div class="friend-section">
     <div class="section-header">
       <h3>Lời mời kết bạn</h3>
       <span class="badge" *ngIf="friendRequests.length > 0">{{ friendRequests.length }}</span>
     </div>
     
-    <div class="friend-requests" *ngIf="friendRequests.length > 0">
+    <div class="loading-spinner" *ngIf="isLoading.requests">
+      <i class="fa fa-spinner fa-spin"></i>
+      <span>Đang tải...</span>
+    </div>
+    
+    <div class="friend-requests" *ngIf="!isLoading.requests && friendRequests.length > 0">
       <div class="friend-card" *ngFor="let request of friendRequests">
-        <img [src]="request.avatar" alt="{{ request.name }}" class="friend-avatar" />
+        <img [src]="getAvatarUrl(request.from._id)" 
+             [alt]="getFullName(request.from.firstName, request.from.lastName)" 
+             class="friend-avatar" />
         <div class="friend-info">
-          <h4>{{ request.name }}</h4>
-          <p>{{ request.mutualFriends }} bạn chung</p>
+          <h4>{{ getFullName(request.from.firstName, request.from.lastName) }}</h4>
+          <p *ngIf="request.from.mutualFriendsCount">{{ request.from.mutualFriendsCount }} bạn chung</p>
         </div>
         <div class="friend-actions">
-          <button class="btn-accept" (click)="acceptRequest(request.id)">Chấp nhận</button>
-          <button class="btn-reject" (click)="rejectRequest(request.id)">Từ chối</button>
+          <button class="btn-accept" (click)="acceptRequest(request._id)">Chấp nhận</button>
+          <button class="btn-reject" (click)="rejectRequest(request._id)">Từ chối</button>
         </div>
       </div>
     </div>
     
-    <div class="empty-state" *ngIf="friendRequests.length === 0">
+    <div class="empty-state" *ngIf="!isLoading.requests && friendRequests.length === 0">
       <i class="fa fa-user-plus empty-icon"></i>
       <p>Không có lời mời kết bạn nào</p>
     </div>
   </div>
   
+  <!-- Friend Suggestions Section -->
+  <div class="friend-section">
+    <div class="section-header">
+      <h3>Gợi ý kết bạn</h3>
+    </div>
+    
+    <!-- Error Message Display -->
+    <div class="error-message" *ngIf="errorMessage">
+      <i class="fa fa-exclamation-circle"></i>
+      {{ errorMessage }}
+    </div>
+    
+    <div class="loading-spinner" *ngIf="isLoading.suggestions">
+      <i class="fa fa-spinner fa-spin"></i>
+      <span>Đang tải...</span>
+    </div>
+    
+    <div class="friend-suggestions" *ngIf="!isLoading.suggestions && friendSuggestions.length > 0">
+      <div class="friend-card" *ngFor="let suggestion of friendSuggestions">
+        <img [src]="getAvatarUrl(suggestion._id)" 
+             [alt]="getFullName(suggestion.firstName, suggestion.lastName)" 
+             class="friend-avatar" />
+        <div class="friend-info">
+          <h4>{{ getFullName(suggestion.firstName, suggestion.lastName) }}</h4>
+          <p *ngIf="suggestion.mutualFriendsCount">{{ suggestion.mutualFriendsCount }} bạn chung</p>
+          <p *ngIf="suggestion.commonInterestsCount">{{ suggestion.commonInterestsCount }} sở thích chung</p>
+        </div>
+        <div class="friend-actions">
+          <ng-container *ngIf="!suggestion.hasSentRequest && !suggestion.hasReceivedRequest">
+            <button class="btn-accept" (click)="sendRequest(suggestion._id)">Kết bạn</button>
+          </ng-container>
+          
+          <ng-container *ngIf="suggestion.hasSentRequest">
+            <button class="btn-reject" (click)="cancelRequest(suggestion._id)">Hủy lời mời</button>
+          </ng-container>
+          
+          <ng-container *ngIf="suggestion.hasReceivedRequest">
+            <button class="btn-accept" (click)="acceptRequestFromSuggestion(suggestion._id)">Chấp nhận</button>
+            <button class="btn-reject" (click)="rejectRequest(suggestion._id)">Từ chối</button>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+    
+    <div class="empty-state" *ngIf="!isLoading.suggestions && friendSuggestions.length === 0">
+      <i class="fa fa-user-plus empty-icon"></i>
+      <p>Hiện tại chưa có gợi ý kết bạn nào</p>
+    </div>
+  </div>
+  
+  <!-- All Friends Section -->
   <div class="friend-section">
     <div class="section-header">
       <h3>Tất cả bạn bè</h3>
       <span class="friend-count">{{ friendsList.length }}</span>
     </div>
     
-    <div class="friends-list">
+    <div class="loading-spinner" *ngIf="isLoading.friends">
+      <i class="fa fa-spinner fa-spin"></i>
+      <span>Đang tải...</span>
+    </div>
+    
+    <div class="friends-list" *ngIf="!isLoading.friends && friendsList.length > 0">
       <div class="friend-card" *ngFor="let friend of friendsList">
         <div class="friend-avatar-container">
-          <img [src]="friend.avatar" alt="{{ friend.name }}" class="friend-avatar" />
+          <img [src]="getAvatarUrl(friend._id)" 
+               [alt]="getFullName(friend.firstName, friend.lastName)" 
+               class="friend-avatar" />
           <span class="status-indicator" [ngClass]="{'online': friend.isOnline}"></span>
         </div>
         <div class="friend-info">
-          <h4>{{ friend.name }}</h4>
+          <h4>{{ getFullName(friend.firstName, friend.lastName) }}</h4>
           <p>{{ friend.isOnline ? 'Đang hoạt động' : 'Không hoạt động' }}</p>
         </div>
         <div class="friend-actions">
           <button class="btn-message">
             <i class="fa fa-comment"></i> Nhắn tin
           </button>
+          <button class="btn-remove" (click)="removeFriend(friend._id)">
+            <i class="fa fa-user-times"></i>
+          </button>
         </div>
       </div>
     </div>
     
-    <div class="empty-state" *ngIf="friendsList.length === 0">
+    <div class="empty-state" *ngIf="!isLoading.friends && friendsList.length === 0">
       <i class="fa fa-users empty-icon"></i>
       <p>Chưa có bạn bè nào</p>
-      <button class="btn-find-friends">Tìm bạn bè</button>
+      <button class="btn-find-friends" routerLink="/dashboard/search">Tìm bạn bè</button>
     </div>
   </div>
 </div> 
