@@ -215,4 +215,105 @@
       </button>
     </div>
   </div>
+</div>
+
+<!-- Add Edit Post Modal -->
+<div class="modal" [class.show]="isEditingPostModal" *ngIf="editingPost">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Chỉnh sửa bài viết</h5>
+        <button type="button" class="close" (click)="cancelEditPost()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="editPostForm" (ngSubmit)="updatePost()">
+          <div class="form-group">
+            <textarea formControlName="content" class="form-control" rows="4" placeholder="Nội dung bài viết..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Cảm xúc</label>
+            <select formControlName="emotion" class="form-control">
+              <option *ngFor="let emotion of emotions" [value]="emotion.value">{{ emotion.label }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Quyền riêng tư</label>
+            <select formControlName="privacy" class="form-control">
+              <option *ngFor="let option of privacyOptions" [value]="option.value">{{ option.label }}</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Hashtags (phân cách bằng dấu phẩy)</label>
+            <input type="text" formControlName="hashtags" class="form-control" placeholder="hashtag1, hashtag2, ...">
+          </div>
+          
+          <!-- Media upload section -->
+          <div class="form-group">
+            <label>Thêm ảnh/video mới</label>
+            <div class="media-upload">
+              <label for="edit-media-files" class="btn-upload">
+                <i class="fa fa-image"></i> Chọn ảnh/video
+              </label>
+              <input 
+                type="file" 
+                id="edit-media-files" 
+                multiple 
+                accept="image/*,video/*" 
+                (change)="onEditFileChange($event)" 
+                style="display: none;"
+              >
+            </div>
+          </div>
+          
+          <!-- Media preview -->
+          <div *ngIf="editPreviewImages.length > 0" class="media-preview">
+            <div *ngFor="let preview of editPreviewImages; let i = index" class="preview-item">
+              <img [src]="preview" alt="Preview">
+              <button type="button" class="remove-btn" (click)="removeEditFile(i)">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Existing Media preview -->
+          <ng-container *ngIf="editingPost">
+            <ng-container *ngIf="editingPost.imageUrls && editingPost.imageUrls.length > 0">
+              <div class="existing-media">
+                <label>Ảnh hiện tại</label>
+                <div class="media-preview">
+                  <div *ngFor="let image of editingPost.imageUrls; let i = index" class="preview-item">
+                    <img [src]="image" alt="Existing image">
+                    <button type="button" class="remove-btn" (click)="removeExistingImage(i)">
+                      <i class="fa fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+
+            <ng-container *ngIf="editingPost.videoUrls && editingPost.videoUrls.length > 0">
+              <div class="existing-media">
+                <label>Video hiện tại</label>
+                <div class="media-preview">
+                  <div *ngFor="let video of editingPost.videoUrls; let i = index" class="preview-item">
+                    <video [src]="video" controls></video>
+                    <button type="button" class="remove-btn" (click)="removeExistingVideo(i)">
+                      <i class="fa fa-times"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </ng-container>
+          </ng-container>
+          
+          <div class="form-actions">
+            <button type="button" class="btn-cancel" (click)="cancelEditPost()">Hủy</button>
+            <button type="submit" class="btn-submit" [disabled]="editPostForm.invalid">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div> 

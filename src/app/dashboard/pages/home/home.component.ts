@@ -21,6 +21,7 @@ import { Router } from '@angular/router';
 export class HomeComponent implements OnInit {
   posts: Post[] = [];
   postForm: FormGroup;
+  editPostForm: FormGroup;
   isLoading = false;
   page = 1;
   limit = 10;
@@ -28,6 +29,10 @@ export class HomeComponent implements OnInit {
   selectedFiles: File[] = [];
   previewImages: string[] = [];
   editingPost: Post | null = null;
+  isEditingPostModal = false;
+  editSelectedFiles: File[] = [];
+  editPreviewImages: string[] = [];
+  filesToRemove: string[] = [];
   currentUser: any = null;
   emotions = [
     { value: 'none', label: 'Không có' },
@@ -57,6 +62,14 @@ export class HomeComponent implements OnInit {
     private router: Router
   ) {
     this.postForm = this.fb.group({
+      content: ['', [Validators.required]],
+      hashtags: [''],
+      emotion: ['none'],
+      privacy: ['public']
+    });
+    
+    // Initialize the edit form
+    this.editPostForm = this.fb.group({
       content: ['', [Validators.required]],
       hashtags: [''],
       emotion: ['none'],
@@ -193,15 +206,153 @@ export class HomeComponent implements OnInit {
 
   editPost(post: Post): void {
     this.editingPost = post;
-    this.postForm.patchValue({
-      content: post.content,
-      hashtags: post.hashtags ? post.hashtags.join(', ') : '',
-      emotion: post.emotion,
-      privacy: post.privacy
+    this.isEditingPostModal = true;
+    
+    // Initialize edit form
+    this.editPostForm = this.fb.group({
+      content: [post.content, [Validators.required]],
+      hashtags: [post.hashtags ? post.hashtags.join(', ') : ''],
+      emotion: [post.emotion || 'none'],
+      privacy: [post.privacy || 'public']
     });
     
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Reset edit media
+    this.editSelectedFiles = [];
+    this.editPreviewImages = [];
+    this.filesToRemove = [];
+  }
+
+  cancelEditPost(): void {
+    this.isEditingPostModal = false;
+    this.editingPost = null;
+    this.editSelectedFiles = [];
+    this.editPreviewImages = [];
+    this.filesToRemove = [];
+  }
+
+  onEditFileChange(event: any): void {
+    if (event.target.files.length > 0) {
+      const files = Array.from(event.target.files) as File[];
+      this.editSelectedFiles = [...this.editSelectedFiles, ...files];
+      
+      // Create previews for images
+      for (const file of files) {
+        if (file.type.startsWith('image/')) {
+          const reader = new FileReader();
+          reader.onload = (e: any) => {
+            this.editPreviewImages.push(e.target.result);
+          };
+          reader.readAsDataURL(file);
+        } else if (file.type.startsWith('video/')) {
+          // For videos, use a placeholder
+          this.editPreviewImages.push('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDIwMCAxMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIxMjAiIGZpbGw9IiM2NjY2NjYiLz48Y2lyY2xlIGN4PSIxMDAiIGN5PSI2MCIgcj0iMzAiIGZpbGw9IiMzMzMzMzMiLz48cG9seWdvbiBwb2ludHM9IjkwLDQ1IDkwLDc1IDEyMCw2MCIgZmlsbD0id2hpdGUiLz48dGV4dCB4PSIxMDAiIHk9IjEwMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+VmlkZW8gUHJldmlldzwvdGV4dD48L3N2Zz4=');
+        }
+      }
+    }
+  }
+
+  removeEditFile(index: number): void {
+    this.editSelectedFiles.splice(index, 1);
+    this.editPreviewImages.splice(index, 1);
+  }
+
+  removeExistingImage(index: number): void {
+    if (this.editingPost && this.editingPost.imageUrls) {
+      this.filesToRemove.push(this.editingPost.imageUrls[index]);
+    }
+  }
+
+  removeExistingVideo(index: number): void {
+    if (this.editingPost && this.editingPost.videoUrls) {
+      this.filesToRemove.push(this.editingPost.videoUrls[index]);
+    }
+  }
+
+  updatePost(): void {
+    if (!this.editingPost || this.editPostForm.invalid) {
+      return;
+    }
+    
+    this.isLoading = true;
+    
+    // First handle text update
+    const postData = {
+      content: this.editPostForm.value.content,
+      hashtags: this.editPostForm.value.hashtags || '',
+      emotion: this.editPostForm.value.emotion || 'none',
+      privacy: this.editPostForm.value.privacy || 'public'
+    };
+    
+    const postId = this.editingPost._id;
+    
+    // Update the post text content first
+    this.postService.updatePost(postId, postData).subscribe({
+      next: (response) => {
+        // Only upload new media files if there are any
+        if (this.editSelectedFiles.length > 0 && this.editingPost) {
+          this.uploadMediaForPost(postId, response.post);
+        } else {
+          this.toastr.success('Bài viết đã được cập nhật thành công!');
+          const index = this.posts.findIndex(p => p._id === postId);
+          if (index > -1) {
+            this.posts[index] = response.post;
+          }
+          this.cancelEditPost();
+          this.isLoading = false;
+        }
+      },
+      error: (error: any) => {
+        console.error('Error updating post:', error);
+        this.toastr.error('Lỗi khi cập nhật bài viết. Vui lòng thử lại sau.');
+        this.isLoading = false;
+      }
+    });
+  }
+
+  // Helper method to upload media for a post
+  uploadMediaForPost(postId: string, updatedPost: any): void {
+    if (!postId || !updatedPost) {
+      this.isLoading = false;
+      this.cancelEditPost();
+      return;
+    }
+    
+    const formData = new FormData();
+    
+    // Add required text fields to avoid 400 Bad Request error
+    formData.append('content', updatedPost.content || '');
+    
+    // Add files to remove if any
+    if (this.filesToRemove.length > 0) {
+      formData.append('filesToRemove', JSON.stringify(this.filesToRemove));
+    }
+    
+    // Add media files
+    this.editSelectedFiles.forEach(file => {
+      formData.append('media', file);
+    });
+    
+    // Use updatePostWithMedia endpoint instead of createPost
+    this.postService.updatePostWithMedia(postId, formData).subscribe({
+      next: (response) => {
+        this.toastr.success('Bài viết đã được cập nhật thành công!');
+        
+        // Update the post in the UI
+        const index = this.posts.findIndex(p => p._id === postId);
+        if (index > -1) {
+          this.posts[index] = response.post;
+        }
+        
+        this.cancelEditPost();
+        this.isLoading = false;
+      },
+      error: (error: any) => {
+        console.error('Error uploading media:', error);
+        this.toastr.error('Lỗi khi tải lên tệp. Bài viết đã được cập nhật nhưng không có tệp mới.');
+        this.isLoading = false;
+        this.cancelEditPost();
+      }
+    });
   }
 
   deletePost(postId: string): void {
