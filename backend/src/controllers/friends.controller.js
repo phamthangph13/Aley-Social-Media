@@ -205,15 +205,24 @@ exports.sendFriendRequest = async (req, res) => {
       }
     });
     
-    res.json({
+    // Create a notification for the request recipient
+    const notificationController = require('./notifications.controller');
+    await notificationController.createNotification(
+      userId, // recipient (user receiving the friend request)
+      req.user.id, // sender (current user sending the request)
+      'friend_request' // notification type
+    );
+    
+    return res.status(200).json({
       success: true,
       message: 'Đã gửi lời mời kết bạn'
     });
   } catch (error) {
     console.error('Error sending friend request:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: 'Lỗi server khi gửi lời mời kết bạn'
+      message: 'Lỗi khi gửi lời mời kết bạn',
+      error: error.message
     });
   }
 };

@@ -11,6 +11,7 @@ const friendsRoutes = require('./routes/friends.routes');
 const postsRoutes = require('./routes/posts.routes');
 const searchRoutes = require('./routes/search.routes');
 const messagesRoutes = require('./routes/messages.routes');
+const notificationsRoutes = require('./routes/notifications.routes');
 
 // Initialize Express app
 const app = express();
@@ -37,6 +38,10 @@ const io = socketIo(server, {
   connectTimeout: 30000
 });
 
+// Make Socket.IO instances globally available for controllers
+global.io = io;
+global.connectedUsers = new Map();
+
 const PORT = process.env.PORT || 5000;
 
 // Middleware
@@ -58,7 +63,11 @@ mongoose.connect(process.env.MONGODB_URI)
   });
 
 // Configure Socket.IO
-const connectedUsers = new Map();
+const connectedUsers = global.connectedUsers;
+
+// Make io accessible to routes - IMPORTANT: this needs to be done before requiring the routes
+app.set('io', io);
+app.set('connectedUsers', connectedUsers);
 
 // Debug middleware cho Socket.IO
 io.use((socket, next) => {
@@ -102,6 +111,23 @@ io.on('connection', (socket) => {
     }
   });
   
+  // Handle notifications
+  socket.on('sendNotification', (data) => {
+    const { recipientId, notification } = data;
+    
+    if (!recipientId) {
+      console.error('Missing recipientId in sendNotification data');
+      return;
+    }
+    
+    const recipientSocketId = connectedUsers.get(recipientId);
+    
+    if (recipientSocketId) {
+      console.log(`Sending notification to ${recipientId} via socket ${recipientSocketId}`);
+      io.to(recipientSocketId).emit('receiveNotification', notification);
+    }
+  });
+  
   // Handle disconnect
   socket.on('disconnect', () => {
     console.log(`Client disconnected: ${socket.id}`);
@@ -122,10 +148,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// Make io accessible to routes
-app.set('io', io);
-app.set('connectedUsers', connectedUsers);
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
@@ -133,6 +155,7 @@ app.use('/api/friends', friendsRoutes);
 app.use('/api/posts', postsRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/messages', messagesRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

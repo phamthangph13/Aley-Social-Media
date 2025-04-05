@@ -463,14 +463,18 @@ exports.toggleLike = async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
     
-    // Check if user has permission to view/like this post
+    // Check if user is the owner of the post (always allowed to interact with own posts)
     const isOwner = post.user.toString() === req.user.id;
-    const isPublic = post.privacy === 'public';
-    const isFriend = post.privacy === 'friends' && 
-      (await User.findById(req.user.id)).friends.includes(post.user);
     
-    if (!isOwner && !isPublic && !isFriend) {
-      return res.status(403).json({ message: 'You do not have permission to interact with this post' });
+    // If not owner, check privacy settings
+    if (!isOwner) {
+      const isPublic = post.privacy === 'public';
+      const isFriend = post.privacy === 'friends' && 
+        (await User.findById(req.user.id)).friends.includes(post.user);
+      
+      if (!isPublic && !isFriend) {
+        return res.status(403).json({ message: 'You do not have permission to interact with this post' });
+      }
     }
     
     // Check if user already liked the post
@@ -482,6 +486,17 @@ exports.toggleLike = async (req, res) => {
     } else {
       // User hasn't liked the post, so add like
       post.likes.push(req.user.id);
+      
+      // Create a notification for the post owner if the liker is not the owner
+      if (post.user.toString() !== req.user.id) {
+        const notificationController = require('./notifications.controller');
+        await notificationController.createNotification(
+          post.user, // recipient (post owner)
+          req.user.id, // sender (current user)
+          'like', // notification type
+          post._id // post ID
+        );
+      }
     }
     
     // Save the updated post
@@ -514,28 +529,46 @@ exports.addComment = async (req, res) => {
       return res.status(404).json({ message: 'Post not found' });
     }
     
-    // Check if user has permission to view/comment on this post
+    // Check if user is the owner of the post (always allowed to interact with own posts)
     const isOwner = post.user.toString() === req.user.id;
-    const isPublic = post.privacy === 'public';
-    const isFriend = post.privacy === 'friends' && 
-      (await User.findById(req.user.id)).friends.includes(post.user);
     
-    if (!isOwner && !isPublic && !isFriend) {
-      return res.status(403).json({ message: 'You do not have permission to comment on this post' });
+    // If not owner, check privacy settings
+    if (!isOwner) {
+      const isPublic = post.privacy === 'public';
+      const isFriend = post.privacy === 'friends' && 
+        (await User.findById(req.user.id)).friends.includes(post.user);
+      
+      if (!isPublic && !isFriend) {
+        return res.status(403).json({ message: 'You do not have permission to comment on this post' });
+      }
     }
     
     // Add comment
-    post.comments.push({
+    const newComment = {
       user: req.user.id,
       text,
       createdAt: Date.now()
-    });
+    };
+    
+    post.comments.push(newComment);
     
     // Save the updated post
     await post.save();
     
+    // Create a notification for the post owner if the commenter is not the owner
+    if (post.user.toString() !== req.user.id) {
+      const notificationController = require('./notifications.controller');
+      await notificationController.createNotification(
+        post.user, // recipient (post owner)
+        req.user.id, // sender (current user)
+        'comment', // notification type
+        post._id, // post ID
+        post.comments[post.comments.length - 1]._id // comment ID
+      );
+    }
+    
     // Get the new comment and populate user data
-    const newComment = post.comments[post.comments.length - 1];
+    const addedComment = post.comments[post.comments.length - 1];
     await Post.populate(post, {
       path: 'comments.user',
       select: 'firstName lastName avatarUrl',
@@ -544,7 +577,7 @@ exports.addComment = async (req, res) => {
     
     // Find the populated comment
     const populatedComment = post.comments.find(c => 
-      c._id.toString() === newComment._id.toString()
+      c._id.toString() === addedComment._id.toString()
     );
     
     res.status(201).json({

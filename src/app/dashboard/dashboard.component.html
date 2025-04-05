@@ -32,12 +32,42 @@
   <div class="main-content">
     <header class="main-header">
       <div class="user-section" *ngIf="user">
-        <div class="notifications">
+        <div class="notifications" (click)="toggleNotificationsPanel()">
           <i class="fa fa-bell"></i>
-          <span class="notification-badge">3</span>
+          <span class="notification-badge" *ngIf="unreadNotificationCount > 0">{{ unreadNotificationCount }}</span>
         </div>
         <span class="user-name">{{ user.firstName }} {{ user.lastName }}</span>
         <button class="btn-logout" (click)="logout()">Logout</button>
+      </div>
+      
+      <!-- Notifications Panel -->
+      <div class="notifications-panel" *ngIf="showNotificationsPanel">
+        <div class="panel-header">
+          <h3>Thông báo</h3>
+          <button class="mark-all-read-btn" (click)="markAllAsRead()" *ngIf="unreadNotificationCount > 0">
+            Đánh dấu tất cả đã đọc
+          </button>
+        </div>
+        
+        <div class="notifications-list" *ngIf="notifications.length > 0">
+          <div 
+            *ngFor="let notification of notifications" 
+            class="notification-item"
+            [class.unread]="!notification.read"
+            (click)="navigateFromNotification(notification)"
+          >
+            <img [src]="notification.sender.avatarUrl" alt="Avatar" class="notification-avatar">
+            <div class="notification-content">
+              <p class="notification-text">{{ getNotificationText(notification) }}</p>
+              <span class="notification-time">{{ getNotificationTime(notification.createdAt) }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="empty-notifications" *ngIf="notifications.length === 0">
+          <i class="fa fa-bell-o"></i>
+          <p>Không có thông báo nào</p>
+        </div>
       </div>
     </header>
     
