@@ -5,6 +5,7 @@ import { ProfileService } from '../../../services/profile.service';
 import { environment } from '../../../../environments/environment';
 import { FriendsService } from '../../../services/friends.service';
 import { AuthService } from '../../../services/auth.service';
+import { PostService } from '../../../services/post.service';
 import { ProfileNavigatorService } from '../../../services/profile-navigator.service';
 import { Subscription } from 'rxjs';
 
@@ -29,6 +30,14 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   
   currentUserId: string | null = null;
   
+  // Post data
+  posts: any[] = [];
+  postsLoading = false;
+  postsError: string | null = null;
+  currentPage = 1;
+  totalPages = 0;
+  totalPosts = 0;
+  
   // Cache timestamp cho URLs
   private timestampCache = new Date().getTime();
   
@@ -44,6 +53,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     private profileService: ProfileService,
     private friendsService: FriendsService,
     private authService: AuthService,
+    private postService: PostService,
     private profileNavigator: ProfileNavigatorService
   ) { }
 
@@ -83,6 +93,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
         
         this.loadUserProfile();
         this.checkFriendshipStatus();
+        this.loadUserPosts();
       }
     });
     this.subscriptions.push(routeSub);
@@ -239,6 +250,47 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error removing friend:', err);
+      }
+    });
+  }
+
+  loadUserPosts(): void {
+    if (!this.userId) return;
+    
+    this.postsLoading = true;
+    this.postsError = null;
+    
+    this.postService.getUserProfilePosts(this.userId, this.currentPage).subscribe({
+      next: (response) => {
+        this.posts = response.posts;
+        this.totalPosts = response.totalPosts;
+        this.totalPages = response.totalPages;
+        this.postsLoading = false;
+      },
+      error: (err) => {
+        this.postsError = 'Không thể tải bài viết';
+        this.postsLoading = false;
+        console.error('Error loading user posts:', err);
+      }
+    });
+  }
+  
+  loadMorePosts(): void {
+    if (this.currentPage >= this.totalPages || this.postsLoading) return;
+    
+    this.currentPage++;
+    this.postsLoading = true;
+    
+    this.postService.getUserProfilePosts(this.userId!, this.currentPage).subscribe({
+      next: (response) => {
+        this.posts = [...this.posts, ...response.posts];
+        this.postsLoading = false;
+      },
+      error: (err) => {
+        this.postsError = 'Không thể tải thêm bài viết';
+        this.postsLoading = false;
+        this.currentPage--; // Revert page number if failed
+        console.error('Error loading more posts:', err);
       }
     });
   }

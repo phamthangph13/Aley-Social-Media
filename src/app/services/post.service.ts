@@ -21,6 +21,11 @@ export class PostService {
     return this.http.get(`${this.apiUrl}?userId=${userId}&page=${page}&limit=${limit}`);
   }
 
+  // Get user profile posts with privacy handling
+  getUserProfilePosts(userId: string, page: number = 1, limit: number = 10): Observable<any> {
+    return this.http.get(`${this.apiUrl}/user/${userId}?page=${page}&limit=${limit}`);
+  }
+
   // Get a specific post by ID
   getPostById(postId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/${postId}`);

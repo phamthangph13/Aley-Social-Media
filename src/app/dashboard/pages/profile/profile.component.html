@@ -126,6 +126,87 @@
         Chưa có thông tin cá nhân nào được thêm.
       </div>
     </div>
+
+    <!-- Posts Section -->
+    <div class="profile-posts-section">
+      <h3>Bài viết của tôi</h3>
+      
+      <!-- Loading State -->
+      <div *ngIf="postsLoading && currentPage === 1" class="posts-loading">
+        <div class="spinner"></div>
+        <p>Đang tải bài viết...</p>
+      </div>
+      
+      <!-- Error State -->
+      <div *ngIf="postsError" class="posts-error">
+        <p>{{ postsError }}</p>
+      </div>
+      
+      <!-- Empty State -->
+      <div *ngIf="!postsLoading && !postsError && posts.length === 0" class="posts-empty">
+        <p>Bạn chưa có bài viết nào</p>
+      </div>
+      
+      <!-- Posts List -->
+      <div *ngIf="posts.length > 0" class="posts-list">
+        <div *ngFor="let post of posts" class="post-card">
+          <!-- Post Header -->
+          <div class="post-header">
+            <img [src]="post.user.avatarUrl" alt="User Avatar" class="post-avatar">
+            <div class="post-info">
+              <h4 class="post-author">{{ post.user.firstName }} {{ post.user.lastName }}</h4>
+              <p class="post-time">{{ post.createdAt | date:'short' }}</p>
+              <!-- Privacy indicator -->
+              <span class="post-privacy" [ngClass]="post.privacy">
+                <i *ngIf="post.privacy === 'public'" class="fas fa-globe"></i>
+                <i *ngIf="post.privacy === 'friends'" class="fas fa-user-friends"></i>
+                <i *ngIf="post.privacy === 'private'" class="fas fa-lock"></i>
+              </span>
+            </div>
+          </div>
+          
+          <!-- Post Content -->
+          <div class="post-content">
+            <p>{{ post.content }}</p>
+            
+            <!-- Post Images -->
+            <div *ngIf="post.imageUrls && post.imageUrls.length > 0" class="post-images">
+              <div [ngClass]="{'single-image': post.imageUrls.length === 1, 'multiple-images': post.imageUrls.length > 1}">
+                <img *ngFor="let imageUrl of post.imageUrls" [src]="imageUrl" alt="Post Image" class="post-image">
+              </div>
+            </div>
+            
+            <!-- Post Videos -->
+            <div *ngIf="post.videoUrls && post.videoUrls.length > 0" class="post-videos">
+              <video *ngFor="let videoUrl of post.videoUrls" [src]="videoUrl" controls class="post-video"></video>
+            </div>
+            
+            <!-- Hashtags -->
+            <div *ngIf="post.hashtags && post.hashtags.length > 0" class="post-hashtags">
+              <span *ngFor="let tag of post.hashtags" class="hashtag">#{{ tag }}</span>
+            </div>
+          </div>
+          
+          <!-- Post Stats -->
+          <div class="post-stats">
+            <div class="likes-count">
+              <i class="fas fa-thumbs-up"></i> {{ post.likes?.length || 0 }}
+            </div>
+            <div class="comments-count">
+              <i class="fas fa-comment"></i> {{ post.comments?.length || 0 }}
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Load More Button -->
+      <div *ngIf="posts.length > 0 && currentPage < totalPages" class="load-more">
+        <button (click)="loadMorePosts()" [disabled]="postsLoading" class="load-more-btn">
+          <span *ngIf="!postsLoading">Tải thêm</span>
+          <span *ngIf="postsLoading" class="spinner-small"></span>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 

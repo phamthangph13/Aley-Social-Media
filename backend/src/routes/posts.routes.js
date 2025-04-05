@@ -9,6 +9,9 @@ router.post('/', auth, postsController.uploadMedia, postsController.createPost);
 // Get all posts (feed)
 router.get('/', auth, postsController.getPosts);
 
+// Get posts for a user profile
+router.get('/user/:userId', auth, postsController.getUserProfilePosts);
+
 // Get a specific post by ID
 router.get('/:id', auth, postsController.getPostById);
 

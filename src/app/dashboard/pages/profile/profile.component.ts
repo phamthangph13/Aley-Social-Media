@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProfileService } from '../../../services/profile.service';
+import { PostService } from '../../../services/post.service';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -21,8 +22,17 @@ export class ProfileComponent implements OnInit {
   avatarFile: File | null = null;
   coverImageFile: File | null = null;
   
+  // Post data
+  posts: any[] = [];
+  postsLoading = false;
+  postsError: string | null = null;
+  currentPage = 1;
+  totalPages = 0;
+  totalPosts = 0;
+  
   constructor(
     private profileService: ProfileService,
+    private postService: PostService,
     private fb: FormBuilder
   ) { 
     this.profileForm = this.fb.group({
@@ -71,11 +81,63 @@ export class ProfileComponent implements OnInit {
           phoneNumber: this.profile.phoneNumber,
           interests: this.profile.interests ? this.profile.interests.join(', ') : ''
         });
+        
+        // Load user's posts after profile is loaded
+        this.loadUserPosts();
       },
       error: (err) => {
         this.error = 'Could not load profile data';
         this.isLoading = false;
         console.error('Error loading profile:', err);
+      }
+    });
+  }
+  
+  // Load posts for current user
+  loadUserPosts(): void {
+    if (!this.profile?._id) {
+      console.error('Cannot load posts: profile ID is missing');
+      return;
+    }
+    
+    console.log('Loading posts for user ID:', this.profile._id);
+    
+    this.postsLoading = true;
+    this.postsError = null;
+    
+    this.postService.getUserProfilePosts(this.profile._id, this.currentPage).subscribe({
+      next: (response) => {
+        console.log('Posts loaded successfully:', response);
+        this.posts = response.posts;
+        this.totalPosts = response.totalPosts;
+        this.totalPages = response.totalPages;
+        this.postsLoading = false;
+      },
+      error: (err) => {
+        this.postsError = 'Không thể tải bài viết';
+        this.postsLoading = false;
+        console.error('Error loading user posts:', err);
+      }
+    });
+  }
+  
+  // Load more posts for infinite scrolling
+  loadMorePosts(): void {
+    if (this.currentPage >= this.totalPages || this.postsLoading) return;
+    
+    this.currentPage++;
+    this.postsLoading = true;
+    
+    this.postService.getUserProfilePosts(this.profile._id, this.currentPage).subscribe({
+      next: (response) => {
+        this.posts = [...this.posts, ...response.posts];
+        this.postsLoading = false;
+      },
+      error: (err) => {
+        this.postsError = 'Không thể tải thêm bài viết';
+        this.postsLoading = false;
+        this.currentPage--; // Revert page number if failed
+        console.error('Error loading more posts:', err);
       }
     });
   }

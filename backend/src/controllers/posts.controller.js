@@ -417,4 +417,106 @@ exports.addComment = async (req, res) => {
     console.error('Error adding comment:', error);
     res.status(500).json({ message: 'Failed to add comment', error: error.message });
   }
+};
+
+// Get user posts for profile page with privacy handling
+exports.getUserProfilePosts = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+    const targetUserId = req.params.userId;
+    const currentUserId = req.user.id;
+    
+    // Check if the user exists
+    const targetUser = await User.findById(targetUserId);
+    if (!targetUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    let query = { user: targetUserId };
+    
+    // If viewing own profile, show all posts (convert to string to ensure proper comparison)
+    if (targetUserId.toString() === currentUserId.toString()) {
+      // No additional filters needed - show all posts
+      console.log("Viewing own profile, showing all posts");
+    } 
+    // If viewing another user's profile
+    else {
+      const currentUser = await User.findById(currentUserId);
+      
+      // Check if they are friends (convert to string for comparison)
+      const isFriend = currentUser.friends.some(friendId => 
+        friendId.toString() === targetUserId.toString()
+      );
+      
+      if (isFriend) {
+        // For friends, show public and friends-only posts
+        query.privacy = { $in: ['public', 'friends'] };
+        console.log("Viewing friend's profile, showing public and friends-only posts");
+      } else {
+        // For non-friends, show only public posts
+        query.privacy = 'public';
+        console.log("Viewing non-friend's profile, showing only public posts");
+      }
+    }
+    
+    // Log the query for debugging
+    console.log("Posts query:", JSON.stringify(query));
+    
+    // Fetch posts with user information
+    const posts = await Post.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .populate({
+        path: 'user',
+        select: 'firstName lastName avatar avatarType'
+      })
+      .populate({
+        path: 'comments.user',
+        select: 'firstName lastName avatar avatarType'
+      });
+    
+    // Count total posts for pagination
+    const totalPosts = await Post.countDocuments(query);
+    
+    // Log the number of posts found
+    console.log(`Found ${posts.length} posts out of ${totalPosts} total`);
+    
+    // Format each post and ensure avatarUrl is included
+    const formattedPosts = posts.map(post => {
+      const formattedPost = post.getFormattedPost();
+      
+      // Make sure user has avatarUrl
+      if (post.user) {
+        formattedPost.user.avatarUrl = post.user.avatar && post.user.avatarType 
+          ? `data:${post.user.avatarType};base64,${post.user.avatar.toString('base64')}` 
+          : '/assets/images/default-avatar.png';
+      }
+      
+      // Make sure comment users have avatarUrl
+      if (formattedPost.comments && formattedPost.comments.length > 0) {
+        formattedPost.comments = formattedPost.comments.map(comment => {
+          if (comment.user && comment.user.avatar && comment.user.avatarType) {
+            comment.user.avatarUrl = `data:${comment.user.avatarType};base64,${comment.user.avatar.toString('base64')}`;
+          } else if (comment.user) {
+            comment.user.avatarUrl = '/assets/images/default-avatar.png';
+          }
+          return comment;
+        });
+      }
+      
+      return formattedPost;
+    });
+    
+    res.status(200).json({
+      posts: formattedPosts,
+      totalPosts,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(totalPosts / limit)
+    });
+  } catch (error) {
+    console.error('Error fetching user profile posts:', error);
+    res.status(500).json({ message: 'Failed to fetch posts', error: error.message });
+  }
 }; 
