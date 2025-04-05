@@ -5,7 +5,7 @@
       <input 
         type="text" 
         class="search-input" 
-        placeholder="Tìm kiếm bạn bè, bài viết hoặc nhóm..." 
+        placeholder="Tìm kiếm bạn bè, bài viết..." 
         [(ngModel)]="searchQuery"
         (keyup.enter)="onSearch()"
       />
@@ -16,53 +16,98 @@
   </div>
   
   <div class="search-filters">
-    <button class="filter-button active">Tất cả</button>
-    <button class="filter-button">Người dùng</button>
-    <button class="filter-button">Bài viết</button>
-    <button class="filter-button">Nhóm</button>
+    <button 
+      class="filter-button" 
+      [class.active]="activeFilter === 'all'"
+      (click)="setFilter('all')"
+    >
+      Tất cả
+    </button>
+    <button 
+      class="filter-button" 
+      [class.active]="activeFilter === 'users'"
+      (click)="setFilter('users')"
+    >
+      Người dùng
+    </button>
+    <button 
+      class="filter-button" 
+      [class.active]="activeFilter === 'posts'"
+      (click)="setFilter('posts')"
+    >
+      Bài viết
+    </button>
   </div>
   
-  <div class="search-results">
-    <div class="result-section">
+  <!-- Loading state -->
+  <div class="loading-indicator" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Đang tìm kiếm...</p>
+  </div>
+  
+  <!-- No results state -->
+  <div class="no-results" *ngIf="searched && !loading && users.length === 0 && posts.length === 0">
+    <p>Không tìm thấy kết quả nào cho "{{ searchQuery }}"</p>
+  </div>
+  
+  <div class="search-results" *ngIf="!loading">
+    <!-- Users section -->
+    <div class="result-section" *ngIf="users.length > 0 && (activeFilter === 'all' || activeFilter === 'users')">
       <h3>Người dùng</h3>
       <div class="user-list">
-        <div class="user-card">
-          <img src="assets/images/avatar-placeholder.jpg" alt="User Avatar" class="user-avatar" />
+        <div class="user-card" *ngFor="let user of users">
+          <img [src]="user.avatarUrl || 'assets/images/avatar-placeholder.jpg'" alt="User Avatar" class="user-avatar" />
           <div class="user-info">
-            <h4>Nguyễn Văn A</h4>
-            <p>5 bạn chung</p>
+            <h4>{{ user.firstName }} {{ user.lastName }}</h4>
+            <p *ngIf="user.commonFriendsCount > 0">{{ user.commonFriendsCount }} bạn chung</p>
+            <p *ngIf="user.location">{{ user.location }}</p>
           </div>
-          <button class="add-friend-btn">
-            <i class="fa fa-user-plus"></i> Kết bạn
-          </button>
-        </div>
-        
-        <div class="user-card">
-          <img src="assets/images/avatar-placeholder.jpg" alt="User Avatar" class="user-avatar" />
-          <div class="user-info">
-            <h4>Trần Thị B</h4>
-            <p>2 bạn chung</p>
-          </div>
-          <button class="add-friend-btn">
-            <i class="fa fa-user-plus"></i> Kết bạn
-          </button>
+          <ng-container *ngIf="user.friendshipStatus !== 'received'; else receiveActions">
+            <button 
+              class="friend-action-btn" 
+              [ngClass]="{'add-friend-btn': user.friendshipStatus === 'none', 
+                         'cancel-request-btn': user.friendshipStatus === 'pending',
+                         'friend-btn': user.friendshipStatus === 'friends'}"
+              (click)="getFriendshipActionButton(user).action()"
+            >
+              <i class="fa" [ngClass]="getFriendshipActionButton(user).icon"></i> 
+              {{ getFriendshipActionButton(user).text }}
+            </button>
+          </ng-container>
+          <ng-template #receiveActions>
+            <div class="friend-request-actions">
+              <button class="accept-btn" (click)="acceptFriendRequest(user._id)">
+                <i class="fa fa-check"></i> Chấp nhận
+              </button>
+              <button class="reject-btn" (click)="rejectFriendRequest(user._id)">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+          </ng-template>
         </div>
       </div>
     </div>
     
-    <div class="result-section">
+    <!-- Posts section -->
+    <div class="result-section" *ngIf="posts.length > 0 && (activeFilter === 'all' || activeFilter === 'posts')">
       <h3>Bài viết</h3>
       <div class="post-list">
-        <div class="post-card">
+        <div class="post-card" *ngFor="let post of posts">
           <div class="post-header">
-            <img src="assets/images/avatar-placeholder.jpg" alt="User Avatar" class="avatar" />
+            <img [src]="post.user?.avatarUrl || 'assets/images/avatar-placeholder.jpg'" alt="User Avatar" class="avatar" />
             <div class="post-info">
-              <h4>Lê Văn C</h4>
-              <span class="post-time">1 ngày trước</span>
+              <h4>{{ post.user?.firstName }} {{ post.user?.lastName }}</h4>
+              <span class="post-time">{{ post.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
             </div>
           </div>
           <div class="post-content">
-            <p>Nội dung bài viết tìm thấy...</p>
+            <p>{{ post.content }}</p>
+            <div class="post-images" *ngIf="post.imageUrls && post.imageUrls.length > 0">
+              <img *ngFor="let imageUrl of post.imageUrls" [src]="imageUrl" alt="Post image" class="post-image" />
+            </div>
+            <div class="post-hashtags" *ngIf="post.hashtags && post.hashtags.length > 0">
+              <span class="hashtag" *ngFor="let tag of post.hashtags">#{{ tag }}</span>
+            </div>
           </div>
         </div>
       </div>

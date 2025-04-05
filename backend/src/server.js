@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth.routes');
 const profileRoutes = require('./routes/profile.routes');
 const friendsRoutes = require('./routes/friends.routes');
 const postsRoutes = require('./routes/posts.routes');
+const searchRoutes = require('./routes/search.routes');
 
 // Initialize Express app
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/friends', friendsRoutes);
 app.use('/api/posts', postsRoutes);
+app.use('/api/search', searchRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

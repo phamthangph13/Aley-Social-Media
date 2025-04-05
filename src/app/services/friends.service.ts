@@ -72,4 +72,9 @@ export class FriendsService {
   removeFriend(friendId: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/${friendId}`);
   }
+  
+  // Unfriend a user (alias for removeFriend for clarity)
+  unfriend(userId: string): Observable<any> {
+    return this.removeFriend(userId);
+  }
 } 
