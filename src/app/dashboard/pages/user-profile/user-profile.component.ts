@@ -8,14 +8,17 @@ import { AuthService } from '../../../services/auth.service';
 import { PostService } from '../../../services/post.service';
 import { ProfileNavigatorService } from '../../../services/profile-navigator.service';
 import { BlockService } from '../../../services/block.service';
+import { FormsModule } from '@angular/forms';
+import { MessagesService } from '../../../core/services/messages.service';
 import { Subscription } from 'rxjs';
+import { NgZone } from '@angular/core';
 
 @Component({
   selector: 'app-user-profile',
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.css'],
   standalone: true,
-  imports: [CommonModule]
+  imports: [CommonModule, FormsModule]
 })
 export class UserProfileComponent implements OnInit, OnDestroy {
   userId: string | null = null;
@@ -51,6 +54,16 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   
   // ID của request
   pendingRequestId: string | null = null;
+  
+  // Thêm biến showOptionsMenu
+  showOptionsMenu = false;
+  
+  // Message modal properties
+  showMessageModal = false;
+  messageText = '';
+  isSendingMessage = false;
+  messageError: string | null = null;
+  messageSuccess = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -60,7 +73,9 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     private authService: AuthService,
     private postService: PostService,
     private blockService: BlockService,
-    private profileNavigator: ProfileNavigatorService
+    private messagesService: MessagesService,
+    private profileNavigator: ProfileNavigatorService,
+    private zone: NgZone
   ) { }
 
   ngOnInit(): void {
@@ -316,8 +331,122 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Updated startConversation method
+  startConversation(event?: Event): void {
+    if (event) {
+      event.stopPropagation(); // Ngăn sự kiện lan ra ngoài
+    }
+    
+    if (!this.userId) {
+      return;
+    }
+    
+    // Show message modal instead of navigating
+    this.showMessageModal = true;
+    this.messageText = '';
+    this.messageError = null;
+    this.messageSuccess = false;
+    
+    // Đăng ký sự kiện click outside cho modal sau một khoảng thời gian ngắn
+    setTimeout(() => {
+      document.addEventListener('click', this.checkModalClickOutside);
+    }, 100);
+  }
+  
+  // Close message modal
+  closeMessageModal(event?: Event): void {
+    if (event) {
+      event.stopPropagation(); // Ngăn sự kiện lan ra ngoài
+    }
+    
+    this.showMessageModal = false;
+    // Hủy đăng ký sự kiện click outside
+    document.removeEventListener('click', this.checkModalClickOutside);
+  }
+  
+  // Kiểm tra click outside modal
+  checkModalClickOutside = (event: any): void => {
+    const modalDialog = document.querySelector('.modal-dialog');
+    
+    if (this.showMessageModal && modalDialog && !modalDialog.contains(event.target)) {
+      // Nếu click không phải trong modal-dialog, đóng modal
+      this.closeMessageModal();
+      // Cần gọi detectChanges để cập nhật UI trong sự kiện bên ngoài Angular
+      this.zone.run(() => {});
+    }
+  }
+  
+  // Send message
+  sendMessage(): void {
+    if (!this.userId || !this.messageText.trim()) {
+      return;
+    }
+    
+    this.isSendingMessage = true;
+    this.messageError = null;
+    
+    this.messagesService.createConversation(this.userId, this.messageText.trim()).subscribe({
+      next: (response) => {
+        this.isSendingMessage = false;
+        this.messageSuccess = true;
+        
+        // Reset form after 2 seconds and close modal
+        setTimeout(() => {
+          this.messageText = '';
+          this.messageSuccess = false;
+          this.showMessageModal = false;
+        }, 2000);
+      },
+      error: (err) => {
+        this.isSendingMessage = false;
+        this.messageError = 'Không thể gửi tin nhắn. Vui lòng thử lại sau.';
+        console.error('Error sending message:', err);
+      }
+    });
+  }
+  
+  // Thêm phương thức toggleOptionsMenu
+  toggleOptionsMenu(event: Event): void {
+    event.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+    this.showOptionsMenu = !this.showOptionsMenu;
+    
+    // Thêm sự kiện click outside để đóng dropdown khi click ra ngoài
+    if (this.showOptionsMenu) {
+      setTimeout(() => {
+        document.addEventListener('click', this.closeOptionsMenu);
+      }, 0);
+    } else {
+      document.removeEventListener('click', this.closeOptionsMenu);
+    }
+  }
+  
+  // Thêm phương thức closeOptionsMenu
+  closeOptionsMenu = (): void => {
+    this.showOptionsMenu = false;
+    document.removeEventListener('click', this.closeOptionsMenu);
+  }
+  
+  // Thêm phương thức reportUser
+  reportUser(): void {
+    if (!this.userId || !this.userProfile) {
+      return;
+    }
+    
+    // Đóng menu tùy chọn trước
+    this.closeOptionsMenu();
+    
+    // Hiển thị dialog xác nhận
+    if (confirm(`Bạn có chắc chắn muốn báo cáo tài khoản "${this.userProfile.firstName} ${this.userProfile.lastName}" không?`)) {
+      // TODO: Gọi API báo cáo người dùng
+      alert('Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét báo cáo của bạn trong thời gian sớm nhất.');
+    }
+  }
+  
+  // Cập nhật phương thức blockUser & unblockUser để đóng menu sau khi thực hiện
   blockUser(): void {
     if (!this.userId) return;
+    
+    this.closeOptionsMenu(); // Đóng menu
     
     this.blockService.blockUser(this.userId).subscribe({
       next: () => {
@@ -333,12 +462,15 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error blocking user:', err);
+        this.error = 'Không thể chặn người dùng, vui lòng thử lại sau.';
       }
     });
   }
-
+  
   unblockUser(): void {
     if (!this.userId) return;
+    
+    this.closeOptionsMenu(); // Đóng menu
     
     this.blockService.unblockUser(this.userId).subscribe({
       next: () => {
@@ -346,6 +478,7 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error unblocking user:', err);
+        this.error = 'Không thể bỏ chặn người dùng, vui lòng thử lại sau.';
       }
     });
   }

@@ -36,16 +36,6 @@
         
         <!-- Friend Status / Add Friend Button -->
         <div class="friend-status">
-          <!-- Block/Unblock Buttons -->
-          <div class="block-actions">
-            <button *ngIf="!isBlocked" class="btn-block" (click)="blockUser()">
-              <i class="fas fa-ban"></i> Chặn người dùng
-            </button>
-            <button *ngIf="isBlocked" class="btn-unblock" (click)="unblockUser()">
-              <i class="fas fa-user-check"></i> Bỏ chặn
-            </button>
-          </div>
-          
           <!-- Friend Status Buttons - Only show if not blocked -->
           <ng-container *ngIf="!isBlocked">
             <!-- Nếu là bạn bè -->
@@ -86,7 +76,30 @@
                 </button>
               </div>
             </div>
+            
+            <!-- Nút nhắn tin - Hiển thị cho tất cả các trạng thái -->
+            <button class="message-btn" (click)="startConversation($event)">
+              <i class="fas fa-comment"></i> Nhắn tin
+            </button>
           </ng-container>
+          
+          <!-- Options menu (more) - shown for all users -->
+          <div class="options-menu">
+            <button class="options-toggle" (click)="toggleOptionsMenu($event)">
+              <i class="fas fa-ellipsis-h"></i>
+            </button>
+            <div class="options-dropdown" [class.show]="showOptionsMenu">
+              <button class="option-item" (click)="blockUser()" *ngIf="!isBlocked">
+                <i class="fas fa-ban"></i> Chặn người dùng
+              </button>
+              <button class="option-item" (click)="unblockUser()" *ngIf="isBlocked">
+                <i class="fas fa-user-check"></i> Bỏ chặn
+              </button>
+              <button class="option-item" (click)="reportUser()">
+                <i class="fas fa-flag"></i> Báo cáo tài khoản này
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -212,6 +225,55 @@
         <i class="fas fa-ban"></i>
         <p>Bạn đã chặn người dùng này.</p>
         <p>Bạn không thể xem thông tin của họ cho đến khi bỏ chặn.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Message Modal - Fixed -->
+<div class="modal" [class.show]="showMessageModal" (click)="closeMessageModal($event)">
+  <div class="modal-dialog" (click)="$event.stopPropagation()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Gửi tin nhắn đến {{ userProfile?.firstName }} {{ userProfile?.lastName }}</h5>
+        <button type="button" class="close" (click)="closeMessageModal($event)">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="messageError" class="alert alert-danger">
+          {{ messageError }}
+        </div>
+        <div *ngIf="messageSuccess" class="alert alert-success">
+          Đã gửi tin nhắn thành công!
+        </div>
+        <form (ngSubmit)="sendMessage()">
+          <div class="form-group">
+            <label for="messageText">Nội dung tin nhắn</label>
+            <textarea 
+              id="messageText" 
+              class="form-control" 
+              rows="4"
+              [(ngModel)]="messageText"
+              name="messageText"
+              placeholder="Nhập tin nhắn của bạn..."
+              [disabled]="isSendingMessage || messageSuccess"
+              required
+            ></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeMessageModal($event)">
+              Đóng
+            </button>
+            <button 
+              type="submit" 
+              class="btn btn-primary" 
+              [disabled]="!messageText || isSendingMessage || messageSuccess"
+            >
+              <span *ngIf="!isSendingMessage && !messageSuccess">Gửi</span>
+              <span *ngIf="isSendingMessage" class="spinner-small"></span>
+              <span *ngIf="messageSuccess"><i class="fas fa-check"></i> Đã gửi</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

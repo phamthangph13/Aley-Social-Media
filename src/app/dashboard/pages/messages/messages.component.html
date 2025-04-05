@@ -69,7 +69,10 @@
       <div 
         *ngFor="let message of messages" 
         class="message" 
-        [ngClass]="{'outgoing': message.isOutgoing === true, 'incoming': message.isOutgoing !== true}"
+        [ngClass]="{
+          'outgoing': message.isOutgoing === true, 
+          'incoming': message.isOutgoing !== true
+        }"
       >
         <div class="message-content">
           <p>{{ message.text }}</p>
@@ -168,4 +171,53 @@
       </button>
     </div>
   </div>
-</div> 
+</div>
+
+<div class="messages-wrapper">
+  <!-- Add socket status indicator -->
+  <div class="socket-status" [ngClass]="{'connected': socketConnected}">
+    <span class="status-dot"></span>
+    <span class="status-text">{{socketConnected ? 'Connected' : 'Connecting...'}}</span>
+  </div>
+  
+  <!-- Conversations list -->
+  <div class="conversations-list">
+    <!-- ... existing conversation list code ... -->
+  </div>
+  
+  <!-- Chat area -->
+  <div class="chat-area">
+    <!-- ... existing chat area code ... -->
+  </div>
+</div>
+
+<style>
+.socket-status {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 3px 8px;
+  border-radius: 10px;
+  z-index: 10;
+}
+
+.socket-status .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #f44336;
+}
+
+.socket-status.connected .status-dot {
+  background-color: #4CAF50;
+}
+
+.socket-status .status-text {
+  color: #555;
+}
+</style> 

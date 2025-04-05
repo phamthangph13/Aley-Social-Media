@@ -35,4 +35,9 @@ export class MessagesService {
   getPotentialRecipients(): Observable<any> {
     return this.http.get(`${this.apiUrl}/recipients/friends`);
   }
+  
+  // Thêm phương thức để lấy thông tin người dùng theo ID
+  getUserInfo(userId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/user/${userId}`);
+  }
 } 
