@@ -164,7 +164,7 @@ exports.sendMessage = async (req, res) => {
     let conversation = await Conversation.findOne({
       _id: conversationId,
       participants: userId
-    });
+    }).populate('participants');
 
     if (!conversation) {
       return res.status(404).json({
@@ -201,6 +201,38 @@ exports.sendMessage = async (req, res) => {
       isOutgoing: true,  // Luôn là true vì người gửi là người dùng hiện tại
       read: false
     };
+
+    // Get the recipient userId (assuming 1-to-1 conversation)
+    const recipientId = conversation.participants.find(
+      participant => participant._id.toString() !== userId
+    )?._id.toString();
+
+    // Emit socket event if recipient is connected
+    if (recipientId) {
+      const io = req.app.get('io');
+      const connectedUsers = req.app.get('connectedUsers');
+      const recipientSocketId = connectedUsers.get(recipientId);
+      
+      console.log('-------------- SOCKET INFO ---------------');
+      console.log(`Sender ID: ${userId}`);
+      console.log(`Recipient ID: ${recipientId}`);
+      console.log(`Connected users: ${Array.from(connectedUsers.entries())}`);
+      console.log(`Recipient socket ID: ${recipientSocketId}`);
+      
+      if (recipientSocketId) {
+        console.log(`Emitting message to socket ${recipientSocketId} for user ${recipientId}`);
+        
+        io.to(recipientSocketId).emit('receiveMessage', {
+          message: formattedMessage,
+          conversationId: conversationId.toString()
+        });
+        
+        console.log('Socket message sent');
+      } else {
+        console.log(`Recipient ${recipientId} is not connected via socket`);
+      }
+      console.log('----------------------------------------');
+    }
 
     res.json({
       success: true,

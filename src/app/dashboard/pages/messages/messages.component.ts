@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MessagesService } from '../../../core/services/messages.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { SocketService } from '../../../core/services/socket.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-messages',
@@ -11,7 +13,7 @@ import { AuthService } from '../../../core/services/auth.service';
   standalone: true,
   imports: [CommonModule, FormsModule]
 })
-export class MessagesComponent implements OnInit {
+export class MessagesComponent implements OnInit, OnDestroy {
   newMessage: string = '';
   showNewConversationModal: boolean = false;
   potentialRecipients: any[] = [];
@@ -25,38 +27,82 @@ export class MessagesComponent implements OnInit {
   sendingMessage: boolean = false;
   currentUserId: string = '';
   
+  private socketSubscription: Subscription = new Subscription();
+  
   constructor(
     private messagesService: MessagesService,
-    private authService: AuthService
-  ) { }
+    private authService: AuthService,
+    private socketService: SocketService
+  ) { 
+    // Thử kết nối lại socket khi component được khởi tạo
+    this.socketService.reconnect();
+  }
   
   ngOnInit(): void {
-    // Tải thông tin người dùng hiện tại trước
+    // Đảm bảo lấy đúng ID người dùng từ service
     this.refreshUserInfo();
+    
+    // Subscribe to real-time messages
+    this.socketSubscription = this.socketService.getMessages().subscribe(data => {
+      console.log('Received real-time message in component:', data);
+      
+      // Handle the message based on whether we're viewing the conversation
+      if (data.conversationId && this.selectedConversation?.id === data.conversationId) {
+        console.log('Adding message to current conversation');
+        // If user is currently viewing this conversation, add the message
+        if (data.message) {
+          // Đặt isOutgoing = false cho tin nhắn nhận được qua socket
+          const message = {...data.message, isOutgoing: false};
+          console.log('Modified received message:', message);
+          
+          // Add message to list
+          this.messages.push(message);
+          
+          // Also update the conversation's last message in the list
+          this.updateConversationWithNewMessage(data.conversationId, message);
+          
+          // Scroll to bottom
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 0);
+        }
+      } else {
+        console.log('Updating conversation list for new message');
+        // Update the conversation list to show new message
+        this.loadConversations();
+      }
+    });
+  }
+  
+  ngOnDestroy(): void {
+    if (this.socketSubscription) {
+      this.socketSubscription.unsubscribe();
+    }
   }
   
   refreshUserInfo(): void {
-    // Đầu tiên thử lấy từ localStorage
+    // Lấy ID người dùng từ AuthService
     this.currentUserId = this.authService.getCurrentUserId();
+    console.log('Current user ID in refreshUserInfo:', this.currentUserId);
     
-    // Nếu không có, refresh từ server
+    // Nếu không có ID, refresh từ server
     if (!this.currentUserId) {
       this.authService.refreshCurrentUser().subscribe({
         next: (user) => {
           if (user) {
             this.currentUserId = this.authService.getCurrentUserId();
+            console.log('User ID after refresh:', this.currentUserId);
           }
-          // Sau khi có thông tin người dùng, mới tải cuộc trò chuyện
+          // Tải cuộc trò chuyện sau khi có ID
           this.loadConversations();
         },
         error: (error) => {
           console.error('Error refreshing user info:', error);
-          // Vẫn tải cuộc trò chuyện ngay cả khi có lỗi
           this.loadConversations();
         }
       });
     } else {
-      // Nếu đã có userId, tải cuộc trò chuyện trực tiếp
+      // Đã có ID, tải cuộc trò chuyện
       this.loadConversations();
     }
   }
@@ -166,30 +212,47 @@ export class MessagesComponent implements OnInit {
   }
   
   sendMessage(): void {
-    if (this.newMessage.trim() === '' || !this.selectedConversation) return;
+    if (!this.newMessage.trim() || !this.selectedConversation) return;
     
     this.sendingMessage = true;
+    const conversationId = this.selectedConversation.id;
+    const messageText = this.newMessage;
+    const recipientId = this.selectedConversation.userId;
     
-    this.messagesService.sendMessage(this.selectedConversation.id, this.newMessage).subscribe({
+    this.messagesService.sendMessage(conversationId, messageText).subscribe({
       next: (response) => {
-        // Add the new message to the messages array
-        const newMessage = response.data;
-        // Đảm bảo tin nhắn mới gửi luôn được đánh dấu là outgoing
-        newMessage.isOutgoing = true;
-        this.messages.push(newMessage);
-        
-        // Clear input
-        this.newMessage = '';
-        
-        // Update conversation's last message
-        this.selectedConversation.lastMessage = newMessage.text;
-        this.selectedConversation.lastMessageTime = newMessage.time;
-        
-        // Scroll to bottom of chat
-        setTimeout(() => {
-          this.scrollToBottom();
-        }, 0);
-        
+        console.log('Message sent successfully:', response);
+        // Add message to the list
+        if (response.success && response.data) {
+          this.messages.push(response.data);
+          
+          // Let's also update the selected conversation's last message
+          this.selectedConversation.lastMessage = response.data.text;
+          this.selectedConversation.lastMessageTime = response.data.time;
+          
+          // Update the conversation in the list
+          const convIndex = this.conversations.findIndex(c => c.id === this.selectedConversation.id);
+          if (convIndex !== -1) {
+            this.conversations[convIndex] = { ...this.selectedConversation };
+            // Move this conversation to the top of the list
+            this.conversations.splice(0, 0, this.conversations.splice(convIndex, 1)[0]);
+          }
+          
+          // Gửi tin nhắn qua socket để người nhận cập nhật real-time
+          if (recipientId) {
+            console.log('Sending message via socket to recipient:', recipientId);
+            this.socketService.sendMessage(recipientId, {
+              ...response.data,
+              conversationId: conversationId
+            });
+          }
+          
+          // Clear input and scroll to bottom
+          this.newMessage = '';
+          setTimeout(() => {
+            this.scrollToBottom();
+          }, 0);
+        }
         this.sendingMessage = false;
       },
       error: (error) => {
@@ -258,5 +321,23 @@ export class MessagesComponent implements OnInit {
         this.sendingMessage = false;
       }
     });
+  }
+  
+  // Helper method to update a conversation with a new message
+  private updateConversationWithNewMessage(conversationId: string, message: any): void {
+    const index = this.conversations.findIndex(c => c.id === conversationId);
+    if (index !== -1) {
+      // Update the conversation
+      this.conversations[index].lastMessage = message.text;
+      this.conversations[index].lastMessageTime = message.time;
+      this.conversations[index].unread = true;
+      
+      // Move to top of list
+      if (index > 0) {
+        const conversation = this.conversations[index];
+        this.conversations.splice(index, 1);
+        this.conversations.unshift(conversation);
+      }
+    }
   }
 } 
