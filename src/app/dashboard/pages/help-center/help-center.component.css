@@ -1,0 +1,263 @@
+.help-center-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.help-header {
+  text-align: center;
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.help-header h1 {
+  font-size: 32px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.help-header p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 25px;
+}
+
+.search-container {
+  position: relative;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.search-container input {
+  width: 100%;
+  padding: 15px 50px 15px 20px;
+  border: 1px solid #ddd;
+  border-radius: 30px;
+  font-size: 16px;
+  outline: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.search-container input:focus {
+  border-color: #4c81af;
+  box-shadow: 0 2px 15px rgba(76, 129, 175, 0.15);
+}
+
+.search-container button {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 10px 15px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: #4c81af;
+}
+
+.popular-questions {
+  margin-bottom: 40px;
+}
+
+.popular-questions h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.help-content {
+  display: flex;
+  gap: 30px;
+}
+
+.categories-sidebar {
+  flex: 0 0 250px;
+}
+
+.categories-sidebar h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.category-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.category-list li {
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.category-list li:hover {
+  background-color: #f5f5f5;
+}
+
+.category-list li.active {
+  background-color: #eef5fd;
+  color: #4c81af;
+  font-weight: 500;
+}
+
+.category-list li i {
+  margin-right: 10px;
+  width: 20px;
+  text-align: center;
+}
+
+.contact-support {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.contact-support h4 {
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.support-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #4c81af;
+  color: white;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.support-btn:hover {
+  background-color: #3a6d98;
+}
+
+.support-btn i {
+  margin-right: 5px;
+}
+
+.faq-content {
+  flex: 1;
+}
+
+.active-category h2 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.faq-list {
+  margin-bottom: 20px;
+}
+
+.faq-item {
+  margin-bottom: 10px;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.faq-question {
+  padding: 15px 20px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 500;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.faq-question:hover {
+  background-color: #f0f0f0;
+}
+
+.faq-question.active {
+  background-color: #eef5fd;
+  color: #4c81af;
+}
+
+.faq-question i {
+  color: #888;
+  transition: all 0.3s ease;
+}
+
+.faq-question.active i {
+  color: #4c81af;
+}
+
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  padding: 0 20px;
+}
+
+.faq-answer.show {
+  max-height: 1000px;
+  padding: 15px 20px;
+  background-color: white;
+}
+
+.faq-answer p {
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .help-content {
+    flex-direction: column;
+  }
+  
+  .categories-sidebar {
+    flex: auto;
+    margin-bottom: 30px;
+  }
+  
+  .category-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .category-list li {
+    flex: 1 0 calc(50% - 10px);
+    box-sizing: border-box;
+    margin-bottom: 0;
+    text-align: center;
+    display: block;
+  }
+  
+  .category-list li i {
+    margin-right: 5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .help-header h1 {
+    font-size: 24px;
+  }
+  
+  .category-list li {
+    flex: 1 0 100%;
+  }
+} 

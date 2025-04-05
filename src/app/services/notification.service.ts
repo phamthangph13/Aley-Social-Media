@@ -26,6 +26,14 @@ export class NotificationService {
     this.monitorSocketConnection();
   }
 
+  // Method to show success notification
+  showSuccess(message: string): void {
+    console.log('Success:', message);
+    // Implementation will depend on your UI notification system
+    // This could use a toast service or other notification system
+    alert(message); // Temporary implementation - replace with proper UI notification
+  }
+
   private initializeSocketListeners(): void {
     this.socketService.listenForEvent<Notification>('receiveNotification').subscribe(notification => {
       if (notification) {

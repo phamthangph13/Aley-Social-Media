@@ -1,0 +1,188 @@
+<div class="settings-container" *ngIf="!isLoading">
+  <!-- Error Alert -->
+  <div class="alert alert-danger" *ngIf="error">
+    {{ error }}
+    <button (click)="clearError()" class="close-btn">×</button>
+  </div>
+
+  <div class="settings-header">
+    <h2>Cài đặt tài khoản</h2>
+    <p>Quản lý cài đặt và tùy chọn cho tài khoản của bạn</p>
+  </div>
+
+  <div class="settings-tabs">
+    <div class="tab-item" [class.active]="activeTab === 'profile'" (click)="activeTab = 'profile'">
+      <i class="fa fa-user"></i> Hồ sơ cá nhân
+    </div>
+    <div class="tab-item" [class.active]="activeTab === 'account'" (click)="activeTab = 'account'">
+      <i class="fa fa-lock"></i> Tài khoản
+    </div>
+    <div class="tab-item" [class.active]="activeTab === 'notifications'" (click)="activeTab = 'notifications'">
+      <i class="fa fa-bell"></i> Thông báo
+    </div>
+    <div class="tab-item" [class.active]="activeTab === 'privacy'" (click)="activeTab = 'privacy'">
+      <i class="fa fa-shield"></i> Quyền riêng tư
+    </div>
+    <div class="tab-item" [class.active]="activeTab === 'blocked'" (click)="activeTab = 'blocked'">
+      <i class="fa fa-ban"></i> Người dùng đã chặn
+    </div>
+  </div>
+
+  <div class="tab-content">
+    <!-- Profile Settings Tab -->
+    <div class="settings-section" *ngIf="activeTab === 'profile'">
+      <h3>Hồ sơ cá nhân</h3>
+      <form [formGroup]="profileForm">
+        <div class="form-group">
+          <label for="displayName">Tên hiển thị</label>
+          <input type="text" id="displayName" formControlName="displayName">
+        </div>
+        <div class="form-group">
+          <label for="bio">Tiểu sử</label>
+          <textarea id="bio" formControlName="bio" rows="4"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="location">Vị trí</label>
+          <input type="text" id="location" formControlName="location">
+        </div>
+        <div class="form-group">
+          <label for="website">Website</label>
+          <input type="text" id="website" formControlName="website">
+        </div>
+        <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+      </form>
+    </div>
+
+    <!-- Account Settings Tab -->
+    <div class="settings-section" *ngIf="activeTab === 'account'">
+      <h3>Thiết lập tài khoản</h3>
+      <form [formGroup]="accountForm" (ngSubmit)="saveAccountSettings()">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" formControlName="email" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="currentPassword">Mật khẩu hiện tại</label>
+          <input type="password" id="currentPassword" formControlName="currentPassword" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="newPassword">Mật khẩu mới</label>
+          <input type="password" id="newPassword" formControlName="newPassword" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="confirmPassword">Xác nhận mật khẩu</label>
+          <input type="password" id="confirmPassword" formControlName="confirmPassword" class="form-control">
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="accountForm.pristine">
+            <i class="fa fa-key"></i> Cập nhật mật khẩu
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Notification Settings Tab -->
+    <div class="settings-section" *ngIf="activeTab === 'notifications'">
+      <h3>Thiết lập thông báo</h3>
+      <form [formGroup]="notificationForm" (ngSubmit)="saveNotificationSettings()">
+        <div class="form-group checkbox">
+          <input type="checkbox" id="emailNotif" formControlName="emailNotifications">
+          <label for="emailNotif">Nhận thông báo qua email</label>
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" id="likeNotif" formControlName="likeNotifications">
+          <label for="likeNotif">Thông báo khi có người thích bài viết của bạn</label>
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" id="commentNotif" formControlName="commentNotifications">
+          <label for="commentNotif">Thông báo khi có bình luận mới</label>
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" id="followNotif" formControlName="followNotifications">
+          <label for="followNotif">Thông báo khi có người theo dõi bạn</label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="notificationForm.pristine">
+            <i class="fa fa-save"></i> Lưu thay đổi
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Privacy Settings Tab -->
+    <div class="settings-section" *ngIf="activeTab === 'privacy'">
+      <h3>Thiết lập quyền riêng tư</h3>
+      <form [formGroup]="privacyForm" (ngSubmit)="savePrivacySettings()">
+        <div class="form-group">
+          <label>Ai có thể xem bài viết của bạn</label>
+          <select formControlName="postVisibility">
+            <option value="public">Tất cả mọi người</option>
+            <option value="friends">Chỉ bạn bè</option>
+            <option value="private">Chỉ mình tôi</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Ai có thể gửi tin nhắn cho bạn</label>
+          <select formControlName="messagePrivacy">
+            <option value="everyone">Tất cả mọi người</option>
+            <option value="friends">Chỉ bạn bè</option>
+            <option value="none">Không ai cả</option>
+          </select>
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" id="profileVisibility" formControlName="profileVisibility">
+          <label for="profileVisibility">Hồ sơ công khai</label>
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" id="searchVisibility" formControlName="searchVisibility">
+          <label for="searchVisibility">Hiển thị trong kết quả tìm kiếm</label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" [disabled]="privacyForm.pristine">
+            <i class="fa fa-save"></i> Lưu thay đổi
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Blocked Users Tab -->
+    <div class="settings-section" *ngIf="activeTab === 'blocked'">
+      <h3>Người dùng đã chặn</h3>
+      <p class="section-desc">Quản lý danh sách người dùng mà bạn đã chặn. Người dùng bị chặn sẽ không thể nhắn tin, kết bạn hoặc xem nội dung của bạn.</p>
+      
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="isLoadingBlockedUsers">
+        <div class="spinner-small"></div>
+        <p>Đang tải danh sách...</p>
+      </div>
+      
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="!isLoadingBlockedUsers && blockedUsers.length === 0">
+        <i class="fa fa-ban empty-icon"></i>
+        <p>Bạn chưa chặn người dùng nào</p>
+      </div>
+      
+      <!-- Blocked Users List -->
+      <div class="blocked-users-list" *ngIf="!isLoadingBlockedUsers && blockedUsers.length > 0">
+        <div class="blocked-user-card" *ngFor="let user of blockedUsers">
+          <div class="user-info">
+            <img [src]="user.avatar || 'assets/images/default-avatar.png'" alt="Avatar" class="user-avatar">
+            <div class="user-details">
+              <h4 class="user-name">{{ user.firstName }} {{ user.lastName }}</h4>
+              <p class="block-date">Đã chặn vào {{ user.dateBlocked | date:'dd/MM/yyyy' }}</p>
+            </div>
+          </div>
+          <button class="btn btn-unblock" (click)="unblockUser(user._id)">
+            <i class="fa fa-unlock"></i> Bỏ chặn
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Spinner -->
+<div class="loading-spinner" *ngIf="isLoading">
+  <div class="spinner"></div>
+  <p>Đang tải thông tin...</p>
+</div> 

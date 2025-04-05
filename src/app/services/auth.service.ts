@@ -72,6 +72,10 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/reset-password`, { token, password });
   }
 
+  changePassword(oldPassword: string, newPassword: string): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/change-password`, { oldPassword, newPassword });
+  }
+
   resendVerification(email: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/resend-verification`, { email });
   }

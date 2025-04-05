@@ -1,0 +1,84 @@
+<div class="help-center-container">
+  <div class="help-header">
+    <h1>Trung tâm hỗ trợ Aley</h1>
+    <p>Tìm câu trả lời cho các câu hỏi của bạn và tìm hiểu cách tận dụng tối đa Aley.</p>
+    
+    <div class="search-container">
+      <input 
+        type="text" 
+        [(ngModel)]="searchQuery" 
+        placeholder="Tìm kiếm câu hỏi..."
+        (keyup.enter)="searchFAQs()"
+      >
+      <button (click)="searchFAQs()">
+        <i class="fa fa-search"></i>
+      </button>
+    </div>
+  </div>
+  
+  <div class="popular-questions">
+    <h2>Câu hỏi phổ biến</h2>
+    <div class="faq-list">
+      <div class="faq-item" *ngFor="let faq of popularQuestions; let i = index">
+        <div 
+          class="faq-question" 
+          [class.active]="isQuestionActive('popular-'+i)"
+          (click)="toggleQuestion('popular-'+i)"
+        >
+          <span>{{ faq.question }}</span>
+          <i class="fa" [ngClass]="isQuestionActive('popular-'+i) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </div>
+        <div class="faq-answer" [class.show]="isQuestionActive('popular-'+i)">
+          <p>{{ faq.answer }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="help-content">
+    <div class="categories-sidebar">
+      <h3>Danh mục</h3>
+      <ul class="category-list">
+        <li 
+          *ngFor="let category of helpCategories" 
+          [class.active]="activeCategory === category.id"
+          (click)="setActiveCategory(category.id)"
+        >
+          <i class="fa fa-{{ category.icon }}"></i>
+          <span>{{ category.title }}</span>
+        </li>
+      </ul>
+      
+      <div class="contact-support">
+        <h4>Cần thêm trợ giúp?</h4>
+        <a href="#" class="support-btn">
+          <i class="fa fa-headphones"></i> Liên hệ hỗ trợ
+        </a>
+      </div>
+    </div>
+    
+    <div class="faq-content">
+      <ng-container *ngFor="let category of helpCategories">
+        <div *ngIf="activeCategory === category.id" class="active-category">
+          <h2>{{ category.title }}</h2>
+          
+          <div class="faq-list">
+            <div class="faq-item" *ngFor="let faq of category.faqs; let i = index">
+              <div 
+                class="faq-question" 
+                [class.active]="isQuestionActive(category.id+'-'+i)"
+                (click)="toggleQuestion(category.id+'-'+i)"
+              >
+                <span>{{ faq.question }}</span>
+                <i class="fa" [ngClass]="isQuestionActive(category.id+'-'+i) ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              </div>
+              <div class="faq-answer" [class.show]="isQuestionActive(category.id+'-'+i)">
+                <p>{{ faq.answer }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div> 

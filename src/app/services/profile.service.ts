@@ -35,6 +35,45 @@ export class ProfileService {
   }
 
   /**
+   * Update notification preferences
+   * @param preferences Notification preferences to update
+   */
+  updateNotificationPreferences(preferences: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/notifications`, preferences);
+  }
+
+  /**
+   * Update privacy settings
+   * @param settings Privacy settings to update
+   */
+  updatePrivacySettings(settings: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/privacy`, settings);
+  }
+
+  /**
+   * Get list of blocked users
+   */
+  getBlockedUsers(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/blocked-users`);
+  }
+
+  /**
+   * Block a user
+   * @param userId User ID to block
+   */
+  blockUser(userId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/block-user`, { userId });
+  }
+
+  /**
+   * Unblock a user
+   * @param userId User ID to unblock
+   */
+  unblockUser(userId: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/blocked-users/${userId}`);
+  }
+
+  /**
    * Upload or update avatar
    * @param file Image file to upload
    */
