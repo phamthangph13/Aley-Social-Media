@@ -13,6 +13,8 @@ const searchRoutes = require('./routes/search.routes');
 const messagesRoutes = require('./routes/messages.routes');
 const notificationsRoutes = require('./routes/notifications.routes');
 const blockRoutes = require('./routes/block.routes');
+const reportsRoutes = require('./routes/reports.routes');
+const userReportsRoutes = require('./routes/user-reports.routes');
 
 // Initialize Express app
 const app = express();
@@ -161,6 +163,8 @@ app.use('/api/search', searchRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/block', blockRoutes);
+app.use('/api/reports', reportsRoutes);
+app.use('/api/user-reports', userReportsRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

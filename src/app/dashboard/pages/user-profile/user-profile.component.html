@@ -278,3 +278,67 @@
     </div>
   </div>
 </div>
+
+<!-- User Report Modal -->
+<div class="modal-overlay" *ngIf="showReportModal" (click)="cancelReport()">
+  <div class="report-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h4>Báo cáo người dùng</h4>
+      <button class="close-btn" (click)="cancelReport()">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p>Hãy chọn lý do báo cáo người dùng này:</p>
+      <form [formGroup]="reportForm" (ngSubmit)="submitReport()">
+        <div class="form-group">
+          <label for="violationType">Loại vi phạm:</label>
+          <select id="violationType" formControlName="violationType" class="form-control">
+            <option value="">Chọn lý do báo cáo</option>
+            <option value="fake_account">Tài khoản giả mạo</option>
+            <option value="inappropriate_content">Nội dung không phù hợp</option>
+            <option value="harassment">Quấy rối</option>
+            <option value="hate_speech">Phát ngôn thù ghét</option>
+            <option value="spam">Spam</option>
+            <option value="impersonation">Mạo danh</option>
+            <option value="privacy_violation">Vi phạm quyền riêng tư</option>
+            <option value="intellectual_property">Vi phạm quyền sở hữu trí tuệ</option>
+            <option value="illegal_activity">Hoạt động trái pháp luật</option>
+            <option value="other">Khác</option>
+          </select>
+          <div *ngIf="reportForm.get('violationType')?.invalid && reportForm.get('violationType')?.touched" class="error-message">
+            Vui lòng chọn một lý do
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="additionalDetails">Chi tiết bổ sung:</label>
+          <textarea 
+            id="additionalDetails" 
+            formControlName="additionalDetails" 
+            placeholder="Cung cấp thêm thông tin về vấn đề này..." 
+            rows="4"
+            class="form-control"
+          ></textarea>
+        </div>
+        
+        <div class="form-actions">
+          <button 
+            type="submit" 
+            class="btn-submit" 
+            [disabled]="reportForm.invalid || isSubmittingReport"
+          >
+            {{ isSubmittingReport ? 'Đang gửi...' : 'Gửi báo cáo' }}
+          </button>
+          <button 
+            type="button" 
+            class="btn-cancel" 
+            (click)="cancelReport()"
+          >
+            Hủy
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

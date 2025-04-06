@@ -8,17 +8,20 @@ import { AuthService } from '../../../services/auth.service';
 import { PostService } from '../../../services/post.service';
 import { ProfileNavigatorService } from '../../../services/profile-navigator.service';
 import { BlockService } from '../../../services/block.service';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MessagesService } from '../../../core/services/messages.service';
 import { Subscription } from 'rxjs';
 import { NgZone } from '@angular/core';
+import { UserReportService } from '../../../services/user-report.service';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-user-profile',
   templateUrl: './user-profile.component.html',
   styleUrls: ['./user-profile.component.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule]
+  imports: [CommonModule, FormsModule, ReactiveFormsModule]
 })
 export class UserProfileComponent implements OnInit, OnDestroy {
   userId: string | null = null;
@@ -65,6 +68,11 @@ export class UserProfileComponent implements OnInit, OnDestroy {
   messageError: string | null = null;
   messageSuccess = false;
 
+  // User report properties
+  showReportModal = false;
+  reportForm: FormGroup;
+  isSubmittingReport = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -75,8 +83,17 @@ export class UserProfileComponent implements OnInit, OnDestroy {
     private blockService: BlockService,
     private messagesService: MessagesService,
     private profileNavigator: ProfileNavigatorService,
-    private zone: NgZone
-  ) { }
+    private zone: NgZone,
+    private userReportService: UserReportService,
+    private fb: FormBuilder,
+    private toastr: ToastrService
+  ) {
+    // Initialize the report form
+    this.reportForm = this.fb.group({
+      violationType: ['', [Validators.required]],
+      additionalDetails: ['']
+    });
+  }
 
   ngOnInit(): void {
     // Lấy ID người dùng hiện tại từ localStorage trước
@@ -432,14 +449,47 @@ export class UserProfileComponent implements OnInit, OnDestroy {
       return;
     }
     
-    // Đóng menu tùy chọn trước
+    // Close options menu
     this.closeOptionsMenu();
     
-    // Hiển thị dialog xác nhận
-    if (confirm(`Bạn có chắc chắn muốn báo cáo tài khoản "${this.userProfile.firstName} ${this.userProfile.lastName}" không?`)) {
-      // TODO: Gọi API báo cáo người dùng
-      alert('Cảm ơn bạn đã báo cáo. Chúng tôi sẽ xem xét báo cáo của bạn trong thời gian sớm nhất.');
+    // Show report modal
+    this.showReportModal = true;
+    
+    // Reset the form
+    this.reportForm.reset();
+  }
+  
+  cancelReport(): void {
+    this.showReportModal = false;
+    this.reportForm.reset();
+  }
+  
+  submitReport(): void {
+    if (this.reportForm.invalid || !this.userId) {
+      return;
     }
+    
+    this.isSubmittingReport = true;
+    
+    const violationType = this.reportForm.value.violationType;
+    const additionalDetails = this.reportForm.value.additionalDetails;
+    
+    this.userReportService.reportUser(this.userId, violationType, additionalDetails).subscribe({
+      next: (response) => {
+        this.toastr.success('Báo cáo đã được gửi thành công. Cảm ơn bạn đã góp phần xây dựng cộng đồng!');
+        this.cancelReport();
+        this.isSubmittingReport = false;
+      },
+      error: (error) => {
+        console.error('Error submitting user report:', error);
+        if (error.status === 400 && error.error.message) {
+          this.toastr.error(error.error.message);
+        } else {
+          this.toastr.error('Đã xảy ra lỗi khi gửi báo cáo. Vui lòng thử lại sau.');
+        }
+        this.isSubmittingReport = false;
+      }
+    });
   }
   
   // Cập nhật phương thức blockUser & unblockUser để đóng menu sau khi thực hiện

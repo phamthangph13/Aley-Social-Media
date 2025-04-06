@@ -10,6 +10,7 @@ import { RouterModule } from '@angular/router';
 import { environment } from '../../../../environments/environment';
 import { ProfileNavigatorService } from '../../../services/profile-navigator.service';
 import { Router } from '@angular/router';
+import { ReportService } from '../../../services/report.service';
 
 @Component({
   selector: 'app-home',
@@ -22,6 +23,7 @@ export class HomeComponent implements OnInit {
   posts: Post[] = [];
   postForm: FormGroup;
   editPostForm: FormGroup;
+  reportForm: FormGroup;
   isLoading = false;
   page = 1;
   limit = 10;
@@ -34,6 +36,9 @@ export class HomeComponent implements OnInit {
   editPreviewImages: string[] = [];
   filesToRemove: string[] = [];
   currentUser: any = null;
+  showReportModal = false;
+  reportingPost: Post | null = null;
+  isSubmittingReport = false;
   emotions = [
     { value: 'none', label: 'Không có' },
     { value: 'happy', label: 'Vui vẻ 😊' },
@@ -59,7 +64,8 @@ export class HomeComponent implements OnInit {
     private fb: FormBuilder,
     private toastr: ToastrService,
     private profileNavigator: ProfileNavigatorService,
-    private router: Router
+    private router: Router,
+    private reportService: ReportService
   ) {
     this.postForm = this.fb.group({
       content: ['', [Validators.required]],
@@ -74,6 +80,12 @@ export class HomeComponent implements OnInit {
       hashtags: [''],
       emotion: ['none'],
       privacy: ['public']
+    });
+    
+    // Initialize the report form
+    this.reportForm = this.fb.group({
+      violationType: ['', [Validators.required]],
+      additionalDetails: ['']
     });
   }
 
@@ -504,5 +516,48 @@ export class HomeComponent implements OnInit {
   isCurrentUser(userId: string): boolean {
     if (!userId) return false;
     return this.profileNavigator.isCurrentUser(userId);
+  }
+
+  openReportModal(post: Post): void {
+    this.reportingPost = post;
+    this.showReportModal = true;
+    
+    // Reset the form
+    this.reportForm.reset();
+  }
+  
+  cancelReport(): void {
+    this.showReportModal = false;
+    this.reportingPost = null;
+    this.reportForm.reset();
+  }
+  
+  submitReport(): void {
+    if (this.reportForm.invalid || !this.reportingPost) {
+      return;
+    }
+    
+    this.isSubmittingReport = true;
+    
+    const postId = this.reportingPost._id;
+    const violationType = this.reportForm.value.violationType;
+    const additionalDetails = this.reportForm.value.additionalDetails;
+    
+    this.reportService.reportPost(postId, violationType, additionalDetails).subscribe({
+      next: (response) => {
+        this.toastr.success('Báo cáo đã được gửi thành công. Cảm ơn bạn đã góp phần xây dựng cộng đồng!');
+        this.cancelReport();
+        this.isSubmittingReport = false;
+      },
+      error: (error) => {
+        console.error('Error submitting report:', error);
+        if (error.status === 400 && error.error.message) {
+          this.toastr.error(error.error.message);
+        } else {
+          this.toastr.error('Đã xảy ra lỗi khi gửi báo cáo. Vui lòng thử lại sau.');
+        }
+        this.isSubmittingReport = false;
+      }
+    });
   }
 } 
