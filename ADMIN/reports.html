@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALEY Social Media - Reports Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="reports.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>ALEY Admin</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="users.html"><i class="fas fa-users"></i> Users</a></li>
+                <li><a href="posts.html"><i class="fas fa-file-alt"></i> Posts</a></li>
+                <li><a href="comments.html"><i class="fas fa-comments"></i> Comments</a></li>
+                <li class="active"><a href="reports.html"><i class="fas fa-flag"></i> Reports</a></li>
+                <li><a href="#analytics"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                <li><a href="#settings"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <div class="admin-profile">
+                <img src="https://via.placeholder.com/50" alt="Admin Profile">
+                <div>
+                    <h4>Admin User</h4>
+                    <p>Super Admin</p>
+                </div>
+            </div>
+        </nav>
+
+        <main class="content">
+            <header>
+                <div class="header-left">
+                    <h1>Reports Management</h1>
+                    <p>Manage all reported content on ALEY Social Media</p>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search reports...">
+                    </div>
+                    <div class="notification">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-count">5</span>
+                    </div>
+                    <div class="logout">
+                        <button><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="reports-tabs">
+                <button class="tab-btn active" data-tab="posts">Post Reports</button>
+                <button class="tab-btn" data-tab="users">User Account Reports</button>
+            </div>
+
+            <div class="report-actions">
+                <div class="filter-options">
+                    <select id="status-filter">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="reviewed">Reviewed</option>
+                        <option value="resolved">Resolved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <select id="priority-filter">
+                        <option value="all">All Priority</option>
+                        <option value="high">High Priority</option>
+                        <option value="medium">Medium Priority</option>
+                        <option value="low">Low Priority</option>
+                    </select>
+                    <button id="filter-btn">Apply Filters</button>
+                </div>
+                <button class="export-btn"><i class="fas fa-file-export"></i> Export Reports</button>
+            </div>
+
+            <!-- Post Reports Tab Content -->
+            <div id="posts-tab" class="tab-content active">
+                <div class="reports-list-container">
+                    <table class="reports-list">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="select-all-posts"></th>
+                                <th>Report ID</th>
+                                <th>Post</th>
+                                <th>Reported By</th>
+                                <th>Reason</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox" class="report-select"></td>
+                                <td>#RP001</td>
+                                <td class="post-cell">
+                                    <img src="https://via.placeholder.com/40" alt="Post Thumbnail">
+                                    <div>
+                                        <h4>Post Title Goes Here</h4>
+                                        <p>By: John Doe</p>
+                                    </div>
+                                </td>
+                                <td>Sarah Johnson</td>
+                                <td>Inappropriate Content</td>
+                                <td>Apr 15, 2023 | 10:23 AM</td>
+                                <td><span class="status pending">Pending</span></td>
+                                <td><span class="priority high">High</span></td>
+                                <td class="actions">
+                                    <button class="view" title="View Details"><i class="fas fa-eye"></i></button>
+                                    <button class="resolve" title="Resolve Report"><i class="fas fa-check"></i></button>
+                                    <button class="reject" title="Reject Report"><i class="fas fa-times"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="report-select"></td>
+                                <td>#RP002</td>
+                                <td class="post-cell">
+                                    <img src="https://via.placeholder.com/40" alt="Post Thumbnail">
+                                    <div>
+                                        <h4>Another Post Title</h4>
+                                        <p>By: Emily Wilson</p>
+                                    </div>
+                                </td>
+                                <td>Michael Brown</td>
+                                <td>Spam Content</td>
+                                <td>Apr 14, 2023 | 08:45 AM</td>
+                                <td><span class="status reviewed">Reviewed</span></td>
+                                <td><span class="priority medium">Medium</span></td>
+                                <td class="actions">
+                                    <button class="view" title="View Details"><i class="fas fa-eye"></i></button>
+                                    <button class="resolve" title="Resolve Report"><i class="fas fa-check"></i></button>
+                                    <button class="reject" title="Reject Report"><i class="fas fa-times"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="report-select"></td>
+                                <td>#RP003</td>
+                                <td class="post-cell">
+                                    <img src="https://via.placeholder.com/40" alt="Post Thumbnail">
+                                    <div>
+                                        <h4>This is a Long Post Title That Will Be Truncated</h4>
+                                        <p>By: David Miller</p>
+                                    </div>
+                                </td>
+                                <td>Jane Smith</td>
+                                <td>Harassment/Bullying</td>
+                                <td>Apr 13, 2023 | 02:15 PM</td>
+                                <td><span class="status resolved">Resolved</span></td>
+                                <td><span class="priority high">High</span></td>
+                                <td class="actions">
+                                    <button class="view" title="View Details"><i class="fas fa-eye"></i></button>
+                                    <button class="resolve disabled" title="Resolve Report"><i class="fas fa-check"></i></button>
+                                    <button class="reject disabled" title="Reject Report"><i class="fas fa-times"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="report-select"></td>
+                                <td>#RP004</td>
+                                <td class="post-cell">
+                                    <img src="https://via.placeholder.com/40" alt="Post Thumbnail">
+                                    <div>
+                                        <h4>Fourth Post Title</h4>
+                                        <p>By: Sarah Johnson</p>
+                                    </div>
+                                </td>
+                                <td>Robert Williams</td>
+                                <td>Copyright Violation</td>
+                                <td>Apr 12, 2023 | 11:30 AM</td>
+                                <td><span class="status rejected">Rejected</span></td>
+                                <td><span class="priority low">Low</span></td>
+                                <td class="actions">
+                                    <button class="view" title="View Details"><i class="fas fa-eye"></i></button>
+                                    <button class="resolve disabled" title="Resolve Report"><i class="fas fa-check"></i></button>
+                                    <button class="reject disabled" title="Reject Report"><i class="fas fa-times"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="report-select"></td>
+                                <td>#RP005</td>
+                                <td class="post-cell">
+                                    <img src="https://via.placeholder.com/40" alt="Post Thumbnail">
+                                    <div>
+                                        <h4>Fifth Post Title</h4>
+                                        <p>By: Michael Brown</p>
+                                    </div>
+                                </td>
+                                <td>Jennifer Adams</td>
+                                <td>Inappropriate Content</td>
+                                <td>Apr 10, 2023 | 09:20 AM</td>
+                                <td><span class="status pending">Pending</span></td>
+                                <td><span class="priority medium">Medium</span></td>
+                                <td class="actions">
+                                    <button class="view" title="View Details"><i class="fas fa-eye"></i></button>
+                                    <button class="resolve" title="Resolve Report"><i class="fas fa-check"></i></button>
+                                    <button class="reject" title="Reject Report"><i class="fas fa-times"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- User Account Reports Tab Content -->
+            <div id="users-tab" class="tab-content">
+                <div class="reports-list-container">
+                    <table class="reports-list">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="select-all-users"></th>
+                                <th>Report ID</th>
+                                <th>User</th>
+                                <th>Reported By</th>
+                                <th>Reason</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox" class="report-select"></td>
+                                <td>#RU001</td>
+                                <td class="user-cell">
+                                    <img src="https://via.placeholder.com/40" alt="User">
+                                    <div>
+                                        <h4>John Doe</h4>
+                                        <p>johndoe@example.com</p>
+                                    </div>
+                                </td>
+                                <td>Sarah Wilson</td>
+                                <td>Fake Profile</td>
+                                <td>Apr 15, 2023 | 11:45 AM</td>
+                                <td><span class="status pending">Pending</span></td>
+                                <td><span class="priority medium">Medium</span></td>
+                                <td class="actions">
+                                    <button class="view" title="View Details"><i class="fas fa-eye"></i></button>
+                                    <button class="resolve" title="Resolve Report"><i class="fas fa-check"></i></button>
+                                    <button class="reject" title="Reject Report"><i class="fas fa-times"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="report-select"></td>
+                                <td>#RU002</td>
+                                <td class="user-cell">
+                                    <img src="https://via.placeholder.com/40" alt="User">
+                                    <div>
+                                        <h4>Emily Wilson</h4>
+                                        <p>emily@example.com</p>
+                                    </div>
+                                </td>
+                                <td>Michael Johnson</td>
+                                <td>Harassment</td>
+                                <td>Apr 14, 2023 | 02:30 PM</td>
+                                <td><span class="status reviewed">Reviewed</span></td>
+                                <td><span class="priority high">High</span></td>
+                                <td class="actions">
+                                    <button class="view" title="View Details"><i class="fas fa-eye"></i></button>
+                                    <button class="resolve" title="Resolve Report"><i class="fas fa-check"></i></button>
+                                    <button class="reject" title="Reject Report"><i class="fas fa-times"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="report-select"></td>
+                                <td>#RU003</td>
+                                <td class="user-cell">
+                                    <img src="https://via.placeholder.com/40" alt="User">
+                                    <div>
+                                        <h4>David Miller</h4>
+                                        <p>david@example.com</p>
+                                    </div>
+                                </td>
+                                <td>Robert Taylor</td>
+                                <td>Spam Activities</td>
+                                <td>Apr 12, 2023 | 09:15 AM</td>
+                                <td><span class="status resolved">Resolved</span></td>
+                                <td><span class="priority low">Low</span></td>
+                                <td class="actions">
+                                    <button class="view" title="View Details"><i class="fas fa-eye"></i></button>
+                                    <button class="resolve disabled" title="Resolve Report"><i class="fas fa-check"></i></button>
+                                    <button class="reject disabled" title="Reject Report"><i class="fas fa-times"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="report-select"></td>
+                                <td>#RU004</td>
+                                <td class="user-cell">
+                                    <img src="https://via.placeholder.com/40" alt="User">
+                                    <div>
+                                        <h4>Sarah Johnson</h4>
+                                        <p>sarah@example.com</p>
+                                    </div>
+                                </td>
+                                <td>Jennifer Adams</td>
+                                <td>Impersonation</td>
+                                <td>Apr 10, 2023 | 04:45 PM</td>
+                                <td><span class="status rejected">Rejected</span></td>
+                                <td><span class="priority medium">Medium</span></td>
+                                <td class="actions">
+                                    <button class="view" title="View Details"><i class="fas fa-eye"></i></button>
+                                    <button class="resolve disabled" title="Resolve Report"><i class="fas fa-check"></i></button>
+                                    <button class="reject disabled" title="Reject Report"><i class="fas fa-times"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox" class="report-select"></td>
+                                <td>#RU005</td>
+                                <td class="user-cell">
+                                    <img src="https://via.placeholder.com/40" alt="User">
+                                    <div>
+                                        <h4>Michael Brown</h4>
+                                        <p>michael@example.com</p>
+                                    </div>
+                                </td>
+                                <td>Amanda Clark</td>
+                                <td>Inappropriate Behavior</td>
+                                <td>Apr 08, 2023 | 10:30 AM</td>
+                                <td><span class="status pending">Pending</span></td>
+                                <td><span class="priority high">High</span></td>
+                                <td class="actions">
+                                    <button class="view" title="View Details"><i class="fas fa-eye"></i></button>
+                                    <button class="resolve" title="Resolve Report"><i class="fas fa-check"></i></button>
+                                    <button class="reject" title="Reject Report"><i class="fas fa-times"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="pagination">
+                <button class="page-btn" disabled><i class="fas fa-angle-double-left"></i></button>
+                <button class="page-btn" disabled><i class="fas fa-angle-left"></i></button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <span>...</span>
+                <button class="page-btn">10</button>
+                <button class="page-btn"><i class="fas fa-angle-right"></i></button>
+                <button class="page-btn"><i class="fas fa-angle-double-right"></i></button>
+            </div>
+
+            <div class="bulk-actions">
+                <select id="bulk-action">
+                    <option value="">Bulk Actions</option>
+                    <option value="resolve">Resolve Selected</option>
+                    <option value="reject">Reject Selected</option>
+                    <option value="mark-reviewed">Mark as Reviewed</option>
+                    <option value="set-priority-high">Set High Priority</option>
+                    <option value="set-priority-medium">Set Medium Priority</option>
+                    <option value="set-priority-low">Set Low Priority</option>
+                </select>
+                <button id="apply-bulk">Apply</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Report Details Modal -->
+    <div class="modal" id="report-details-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Report Details</h2>
+                <button class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="report-detail-section">
+                    <h3>Report Information</h3>
+                    <div class="report-info-grid">
+                        <div class="report-info-item">
+                            <span class="label">Report ID:</span>
+                            <span class="value" id="report-id">#RP001</span>
+                        </div>
+                        <div class="report-info-item">
+                            <span class="label">Report Date:</span>
+                            <span class="value" id="report-date">Apr 15, 2023 | 10:23 AM</span>
+                        </div>
+                        <div class="report-info-item">
+                            <span class="label">Status:</span>
+                            <span class="value"><span class="status pending" id="report-status">Pending</span></span>
+                        </div>
+                        <div class="report-info-item">
+                            <span class="label">Priority:</span>
+                            <span class="value"><span class="priority high" id="report-priority">High</span></span>
+                        </div>
+                        <div class="report-info-item">
+                            <span class="label">Reported By:</span>
+                            <span class="value" id="reporter-name">Sarah Johnson</span>
+                        </div>
+                        <div class="report-info-item">
+                            <span class="label">Reason:</span>
+                            <span class="value" id="report-reason">Inappropriate Content</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-detail-section">
+                    <h3>Content Information</h3>
+                    <div class="content-preview" id="content-preview">
+                        <!-- Will be populated dynamically based on report type -->
+                    </div>
+                </div>
+
+                <div class="report-detail-section">
+                    <h3>Report Description</h3>
+                    <p id="report-description">This post contains inappropriate content that violates the community guidelines. The user has posted explicit material that is not suitable for our platform. Multiple users have flagged this content as inappropriate.</p>
+                </div>
+
+                <div class="report-actions-panel">
+                    <div>
+                        <select id="update-status">
+                            <option value="pending">Pending</option>
+                            <option value="reviewed">Reviewed</option>
+                            <option value="resolved">Resolved</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                        <select id="update-priority">
+                            <option value="high">High Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="low">Low Priority</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button class="action-btn reject-btn"><i class="fas fa-times"></i> Reject Report</button>
+                        <button class="action-btn resolve-btn"><i class="fas fa-check"></i> Resolve Report</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="reports.js"></script>
+</body>
+</html> 

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALEY Social Media - User Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="users.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>ALEY Admin</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li class="active"><a href="users.html"><i class="fas fa-users"></i> Users</a></li>
+                <li><a href="posts.html"><i class="fas fa-file-alt"></i> Posts</a></li>
+                <li><a href="comments.html"><i class="fas fa-comments"></i> Comments</a></li>
+                <li><a href="reports.html"><i class="fas fa-flag"></i> Reports</a></li>
+                <li><a href="#analytics"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                <li><a href="#settings"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <div class="admin-profile">
+                <img src="https://via.placeholder.com/50" alt="Admin Profile">
+                <div>
+                    <h4>Admin User</h4>
+                    <p>Super Admin</p>
+                </div>
+            </div>
+        </nav>
+
+        <main class="content">
+            <header>
+                <div class="header-left">
+                    <h1>User Management</h1>
+                    <p>Manage all users of ALEY Social Media</p>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search users...">
+                    </div>
+                    <div class="notification">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-count">5</span>
+                    </div>
+                    <div class="logout">
+                        <button><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="user-actions">
+                <div class="filter-options">
+                    <select id="status-filter">
+                        <option value="all">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="suspended">Suspended</option>
+                    </select>
+                    <select id="role-filter">
+                        <option value="all">All Roles</option>
+                        <option value="user">User</option>
+                        <option value="moderator">Moderator</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <button id="filter-btn">Apply Filters</button>
+                </div>
+                <button class="add-user-btn"><i class="fas fa-plus"></i> Add New User</button>
+            </div>
+
+            <div class="user-list-container">
+                <table class="user-list">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="select-all"></th>
+                            <th>User ID</th>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Posts</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Joined Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox" class="user-select"></td>
+                            <td>#USR001</td>
+                            <td class="user-cell">
+                                <img src="https://via.placeholder.com/40" alt="User">
+                                <div>
+                                    <h4>John Doe</h4>
+                                </div>
+                            </td>
+                            <td>johndoe@example.com</td>
+                            <td>+1 234 567 890</td>
+                            <td>24</td>
+                            <td>User</td>
+                            <td><span class="status active">Active</span></td>
+                            <td>Apr 3, 2023</td>
+                            <td class="actions">
+                                <button class="view" title="View Profile"><i class="fas fa-eye"></i></button>
+                                <button class="edit" title="Edit User"><i class="fas fa-edit"></i></button>
+                                <button class="delete" title="Delete User"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="user-select"></td>
+                            <td>#USR002</td>
+                            <td class="user-cell">
+                                <img src="https://via.placeholder.com/40" alt="User">
+                                <div>
+                                    <h4>Sarah Johnson</h4>
+                                </div>
+                            </td>
+                            <td>sarah@example.com</td>
+                            <td>+1 987 654 321</td>
+                            <td>36</td>
+                            <td>Moderator</td>
+                            <td><span class="status active">Active</span></td>
+                            <td>Mar 15, 2023</td>
+                            <td class="actions">
+                                <button class="view" title="View Profile"><i class="fas fa-eye"></i></button>
+                                <button class="edit" title="Edit User"><i class="fas fa-edit"></i></button>
+                                <button class="delete" title="Delete User"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="user-select"></td>
+                            <td>#USR003</td>
+                            <td class="user-cell">
+                                <img src="https://via.placeholder.com/40" alt="User">
+                                <div>
+                                    <h4>Michael Brown</h4>
+                                </div>
+                            </td>
+                            <td>michael@example.com</td>
+                            <td>+1 456 789 123</td>
+                            <td>12</td>
+                            <td>User</td>
+                            <td><span class="status inactive">Inactive</span></td>
+                            <td>Feb 28, 2023</td>
+                            <td class="actions">
+                                <button class="view" title="View Profile"><i class="fas fa-eye"></i></button>
+                                <button class="edit" title="Edit User"><i class="fas fa-edit"></i></button>
+                                <button class="delete" title="Delete User"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="user-select"></td>
+                            <td>#USR004</td>
+                            <td class="user-cell">
+                                <img src="https://via.placeholder.com/40" alt="User">
+                                <div>
+                                    <h4>Emily Wilson</h4>
+                                </div>
+                            </td>
+                            <td>emily@example.com</td>
+                            <td>+1 789 123 456</td>
+                            <td>8</td>
+                            <td>User</td>
+                            <td><span class="status suspended">Suspended</span></td>
+                            <td>Feb 12, 2023</td>
+                            <td class="actions">
+                                <button class="view" title="View Profile"><i class="fas fa-eye"></i></button>
+                                <button class="edit" title="Edit User"><i class="fas fa-edit"></i></button>
+                                <button class="delete" title="Delete User"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" class="user-select"></td>
+                            <td>#USR005</td>
+                            <td class="user-cell">
+                                <img src="https://via.placeholder.com/40" alt="User">
+                                <div>
+                                    <h4>David Miller</h4>
+                                </div>
+                            </td>
+                            <td>david@example.com</td>
+                            <td>+1 321 654 987</td>
+                            <td>42</td>
+                            <td>Admin</td>
+                            <td><span class="status active">Active</span></td>
+                            <td>Jan 25, 2023</td>
+                            <td class="actions">
+                                <button class="view" title="View Profile"><i class="fas fa-eye"></i></button>
+                                <button class="edit" title="Edit User"><i class="fas fa-edit"></i></button>
+                                <button class="delete" title="Delete User"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <button class="page-btn" disabled><i class="fas fa-angle-double-left"></i></button>
+                <button class="page-btn" disabled><i class="fas fa-angle-left"></i></button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <span>...</span>
+                <button class="page-btn">10</button>
+                <button class="page-btn"><i class="fas fa-angle-right"></i></button>
+                <button class="page-btn"><i class="fas fa-angle-double-right"></i></button>
+            </div>
+
+            <div class="bulk-actions">
+                <select id="bulk-action">
+                    <option value="">Bulk Actions</option>
+                    <option value="activate">Activate Selected</option>
+                    <option value="deactivate">Deactivate Selected</option>
+                    <option value="delete">Delete Selected</option>
+                </select>
+                <button id="apply-bulk">Apply</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- User Modal -->
+    <div class="modal" id="user-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New User</h2>
+                <button class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="user-form">
+                    <div class="form-group">
+                        <label for="fullname">Full Name</label>
+                        <input type="text" id="fullname" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" id="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role">
+                            <option value="user">User</option>
+                            <option value="moderator">Moderator</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status</label>
+                        <select id="status">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn">Cancel</button>
+                        <button type="submit" class="save-btn">Save User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="users.js"></script>
+</body>
+</html> 

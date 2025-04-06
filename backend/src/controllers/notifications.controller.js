@@ -69,20 +69,25 @@ exports.getUserNotifications = async (req, res) => {
 
     // Format avatar URLs
     const formattedNotifications = notifications.map(notification => {
-      const formattedNotification = notification.toObject();
+      if (!notification) return null; // Skip if notification is null
       
-      if (notification.sender && notification.sender.avatar && notification.sender.avatarType) {
+      const formattedNotification = notification.toObject();
+        
+      if (formattedNotification.sender && notification.sender && notification.sender.avatar && notification.sender.avatarType) {
         formattedNotification.sender.avatarUrl = 
           `data:${notification.sender.avatarType};base64,${notification.sender.avatar.toString('base64')}`;
-      } else if (notification.sender) {
+      } else if (formattedNotification.sender) {
         formattedNotification.sender.avatarUrl = '/assets/images/default-avatar.png';
       }
       
-      delete formattedNotification.sender.avatar;
-      delete formattedNotification.sender.avatarType;
+      // Only delete properties if sender exists
+      if (formattedNotification.sender) {
+        delete formattedNotification.sender.avatar;
+        delete formattedNotification.sender.avatarType;
+      }
       
       return formattedNotification;
-    });
+    }).filter(notification => notification !== null); // Filter out any null entries
     
     // Count unread notifications
     const unreadCount = await Notification.countDocuments({ 

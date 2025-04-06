@@ -1,0 +1,573 @@
+/* Reports Page Specific Styles */
+
+/* Tab Navigation */
+.reports-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tab-btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.tab-btn:hover:not(.active) {
+    background-color: var(--bg-color);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Report Actions */
+.report-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.filter-options {
+    display: flex;
+    gap: 10px;
+}
+
+.filter-options select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 14px;
+    outline: none;
+}
+
+.filter-options button, 
+.export-btn {
+    padding: 8px 16px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+#filter-btn {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+#filter-btn:hover {
+    background-color: var(--border-color);
+}
+
+.export-btn {
+    background-color: var(--text-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.export-btn:hover {
+    background-color: var(--primary-color);
+}
+
+/* Reports List */
+.reports-list-container {
+    background-color: var(--bg-card);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    overflow-x: auto;
+}
+
+.reports-list {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.reports-list th {
+    background-color: var(--bg-color);
+}
+
+.reports-list th,
+.reports-list td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.reports-list tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Post and User Cells */
+.post-cell, .user-cell {
+    display: flex;
+    align-items: center;
+}
+
+.post-cell img, .user-cell img {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    object-fit: cover;
+}
+
+.post-cell img {
+    border-radius: 4px;
+}
+
+.user-cell img {
+    border-radius: 50%;
+}
+
+.post-cell h4, .user-cell h4 {
+    font-size: 14px;
+    margin-bottom: 3px;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.post-cell p, .user-cell p {
+    font-size: 12px;
+    color: var(--text-light);
+}
+
+/* Status and Priority Indicators */
+.status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status.pending {
+    background-color: rgba(254, 202, 87, 0.1);
+    color: var(--warning-color);
+}
+
+.status.reviewed {
+    background-color: rgba(108, 92, 231, 0.1);
+    color: var(--secondary-color);
+}
+
+.status.resolved {
+    background-color: rgba(29, 209, 161, 0.1);
+    color: var(--success-color);
+}
+
+.status.rejected {
+    background-color: rgba(255, 107, 107, 0.1);
+    color: var(--danger-color);
+}
+
+.priority {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.priority.high {
+    background-color: rgba(255, 107, 107, 0.1);
+    color: var(--danger-color);
+}
+
+.priority.medium {
+    background-color: rgba(254, 202, 87, 0.1);
+    color: var(--warning-color);
+}
+
+.priority.low {
+    background-color: rgba(29, 209, 161, 0.1);
+    color: var(--success-color);
+}
+
+/* Action Buttons */
+.actions {
+    display: flex;
+    gap: 5px;
+}
+
+.actions button {
+    width: 30px;
+    height: 30px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.actions .view {
+    background-color: rgba(108, 92, 231, 0.1);
+    color: var(--secondary-color);
+}
+
+.actions .view:hover {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.actions .resolve {
+    background-color: rgba(29, 209, 161, 0.1);
+    color: var(--success-color);
+}
+
+.actions .resolve:hover {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.actions .reject {
+    background-color: rgba(255, 107, 107, 0.1);
+    color: var(--danger-color);
+}
+
+.actions .reject:hover {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.actions button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.actions button.disabled:hover {
+    background-color: inherit;
+    color: inherit;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.page-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.page-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.page-btn:hover:not(.active):not(:disabled) {
+    background-color: var(--bg-color);
+}
+
+.page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Bulk Actions */
+.bulk-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.bulk-actions select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 14px;
+    outline: none;
+}
+
+#apply-bulk {
+    padding: 8px 16px;
+    border-radius: 5px;
+    background-color: var(--text-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+#apply-bulk:hover {
+    background-color: var(--primary-color);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: var(--bg-card);
+    border-radius: 10px;
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from { 
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h2 {
+    font-size: 20px;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--text-light);
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+/* Report Detail Sections */
+.report-detail-section {
+    margin-bottom: 25px;
+}
+
+.report-detail-section h3 {
+    font-size: 16px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.report-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+}
+
+.report-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.report-info-item .label {
+    font-size: 12px;
+    color: var(--text-light);
+}
+
+.report-info-item .value {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.content-preview {
+    background-color: var(--bg-color);
+    border-radius: 5px;
+    padding: 15px;
+    min-height: 100px;
+}
+
+/* Report Actions Panel */
+.report-actions-panel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+}
+
+.report-actions-panel select {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 14px;
+    margin-right: 10px;
+    outline: none;
+}
+
+.action-btn {
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.3s ease;
+}
+
+.reject-btn {
+    background-color: rgba(255, 107, 107, 0.1);
+    color: var(--danger-color);
+    border: 1px solid var(--danger-color);
+    margin-right: 10px;
+}
+
+.reject-btn:hover {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.resolve-btn {
+    background-color: var(--success-color);
+    color: white;
+    border: none;
+}
+
+.resolve-btn:hover {
+    background-color: #14a57c; /* Darker shade of success color */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+    .report-info-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .reports-list th:nth-child(8),
+    .reports-list td:nth-child(8) {
+        display: none;
+    }
+}
+
+@media (max-width: 992px) {
+    .report-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .filter-options {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .export-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .reports-list th:nth-child(4),
+    .reports-list td:nth-child(4),
+    .reports-list th:nth-child(6),
+    .reports-list td:nth-child(6) {
+        display: none;
+    }
+    
+    .report-actions-panel {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .report-actions-panel > div {
+        width: 100%;
+    }
+    
+    .report-actions-panel select {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .report-info-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .reports-tabs {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .reports-list th:nth-child(2),
+    .reports-list td:nth-child(2),
+    .reports-list th:nth-child(5),
+    .reports-list td:nth-child(5) {
+        display: none;
+    }
+    
+    .bulk-actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .bulk-actions select,
+    #apply-bulk {
+        width: 100%;
+    }
+} 

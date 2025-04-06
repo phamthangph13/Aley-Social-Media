@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALEY Social Media - Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>ALEY Admin</h2>
+            </div>
+            <ul class="nav-menu">
+                <li class="active"><a href="#dashboard"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="users.html"><i class="fas fa-users"></i> Users</a></li>
+                <li><a href="posts.html"><i class="fas fa-file-alt"></i> Posts</a></li>
+                <li><a href="comments.html"><i class="fas fa-comments"></i> Comments</a></li>
+                <li><a href="reports.html"><i class="fas fa-flag"></i> Reports</a></li>
+                <li><a href="#analytics"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                <li><a href="#settings"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <div class="admin-profile">
+                <img src="https://via.placeholder.com/50" alt="Admin Profile">
+                <div>
+                    <h4>Admin User</h4>
+                    <p>Super Admin</p>
+                </div>
+            </div>
+        </nav>
+
+        <main class="content">
+            <header>
+                <div class="header-left">
+                    <h1>Dashboard</h1>
+                    <p>Welcome to ALEY Social Media Admin Panel</p>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search...">
+                    </div>
+                    <div class="notification">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-count">5</span>
+                    </div>
+                    <div class="logout">
+                        <button><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon users">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Users</h3>
+                        <h2>15,847</h2>
+                        <p><span class="positive">+12%</span> from last month</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon posts">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Posts</h3>
+                        <h2>28,624</h2>
+                        <p><span class="positive">+8%</span> from last month</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon active">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Active Users</h3>
+                        <h2>9,254</h2>
+                        <p><span class="positive">+5%</span> from last month</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon reports">
+                        <i class="fas fa-flag"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Reports</h3>
+                        <h2>142</h2>
+                        <p><span class="negative">+24%</span> from last month</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-content">
+                <div class="recent-activity">
+                    <div class="section-header">
+                        <h2>Recent Activity</h2>
+                        <a href="#" class="view-all">View All</a>
+                    </div>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-user-plus"></i></div>
+                            <div class="activity-details">
+                                <h4>New User Registration</h4>
+                                <p>User John Doe has registered</p>
+                                <span class="time">2 minutes ago</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-flag"></i></div>
+                            <div class="activity-details">
+                                <h4>New Report</h4>
+                                <p>Post #2451 was reported for inappropriate content</p>
+                                <span class="time">15 minutes ago</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-file-alt"></i></div>
+                            <div class="activity-details">
+                                <h4>New Post</h4>
+                                <p>User Sarah Johnson created a new post</p>
+                                <span class="time">42 minutes ago</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon"><i class="fas fa-comment"></i></div>
+                            <div class="activity-details">
+                                <h4>Comment Flagged</h4>
+                                <p>Comment on Post #1823 was flagged for review</p>
+                                <span class="time">1 hour ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="user-table">
+                    <div class="section-header">
+                        <h2>Recent Users</h2>
+                        <a href="#" class="view-all">View All</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Status</th>
+                                <th>Posts</th>
+                                <th>Joined Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="user-cell">
+                                    <img src="https://via.placeholder.com/40" alt="User">
+                                    <div>
+                                        <h4>John Doe</h4>
+                                        <p>johndoe@example.com</p>
+                                    </div>
+                                </td>
+                                <td><span class="status active">Active</span></td>
+                                <td>24</td>
+                                <td>April 3, 2023</td>
+                                <td class="actions">
+                                    <button class="edit"><i class="fas fa-edit"></i></button>
+                                    <button class="delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="user-cell">
+                                    <img src="https://via.placeholder.com/40" alt="User">
+                                    <div>
+                                        <h4>Sarah Johnson</h4>
+                                        <p>sarah@example.com</p>
+                                    </div>
+                                </td>
+                                <td><span class="status active">Active</span></td>
+                                <td>36</td>
+                                <td>March 15, 2023</td>
+                                <td class="actions">
+                                    <button class="edit"><i class="fas fa-edit"></i></button>
+                                    <button class="delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="user-cell">
+                                    <img src="https://via.placeholder.com/40" alt="User">
+                                    <div>
+                                        <h4>Michael Brown</h4>
+                                        <p>michael@example.com</p>
+                                    </div>
+                                </td>
+                                <td><span class="status inactive">Inactive</span></td>
+                                <td>12</td>
+                                <td>February 28, 2023</td>
+                                <td class="actions">
+                                    <button class="edit"><i class="fas fa-edit"></i></button>
+                                    <button class="delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="user-cell">
+                                    <img src="https://via.placeholder.com/40" alt="User">
+                                    <div>
+                                        <h4>Emily Wilson</h4>
+                                        <p>emily@example.com</p>
+                                    </div>
+                                </td>
+                                <td><span class="status suspended">Suspended</span></td>
+                                <td>8</td>
+                                <td>February 12, 2023</td>
+                                <td class="actions">
+                                    <button class="edit"><i class="fas fa-edit"></i></button>
+                                    <button class="delete"><i class="fas fa-trash"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 

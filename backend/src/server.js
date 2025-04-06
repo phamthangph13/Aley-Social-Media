@@ -15,6 +15,7 @@ const notificationsRoutes = require('./routes/notifications.routes');
 const blockRoutes = require('./routes/block.routes');
 const reportsRoutes = require('./routes/reports.routes');
 const userReportsRoutes = require('./routes/user-reports.routes');
+const adminRoutes = require('./routes/admin.routes');
 
 // Initialize Express app
 const app = express();
@@ -54,6 +55,9 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files
 app.use('/assets', express.static(path.join(__dirname, '../../src/assets')));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Serve ADMIN files directly - no authentication required
+app.use('/admin', express.static(path.join(__dirname, '../../ADMIN')));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
@@ -165,13 +169,20 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/block', blockRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/user-reports', userReportsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Server is running' });
 });
 
+// Redirect root to admin dashboard for convenience
+app.get('/', (req, res) => {
+  res.redirect('/admin/index.html');
+});
+
 // Start server
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Admin dashboard available at http://localhost:${PORT}/admin/`);
 }); 
