@@ -39,7 +39,9 @@ const io = socketIo(server, {
     credentials: true
   },
   transports: ['websocket', 'polling'],
-  connectTimeout: 30000
+  connectTimeout: 30000,
+  pingTimeout: 60000, // Tăng timeout để tránh ngắt kết nối sớm
+  pingInterval: 25000 // Tăng tần suất ping
 });
 
 // Make Socket.IO instances globally available for controllers
@@ -91,14 +93,37 @@ io.on('connection', (socket) => {
   socket.on('authenticate', (userId) => {
     console.log(`User ${userId} authenticated on socket ${socket.id}`);
     
-    // Lưu socket ID cho user ID (cho phép nhiều kết nối từ cùng một user)
-    // Đây là cách xử lý khi user mở nhiều tab/thiết bị
+    // Thay đổi: Xử lý nhiều kết nối từ cùng một người dùng (nhiều tab/thiết bị)
+    // Lưu socket ID cho user ID trong một Map có cấu trúc userId => Set của socketIds
+    if (!global.userSocketsMap) {
+      global.userSocketsMap = new Map();
+    }
+    
+    if (!global.userSocketsMap.has(userId)) {
+      global.userSocketsMap.set(userId, new Set());
+    }
+    
+    // Thêm socket ID mới vào Set
+    global.userSocketsMap.get(userId).add(socket.id);
+    
+    // Lưu userID trong socket để dễ dàng tìm kiếm khi disconnect
+    socket.userId = userId;
+    
+    // Vẫn giữ lại cách lưu trữ cũ để tương thích với mã cũ
     connectedUsers.set(userId, socket.id);
     
     console.log('Connected users now:', Array.from(connectedUsers.entries()));
+    console.log('User sockets map:', Array.from(global.userSocketsMap.entries())
+      .map(([uid, sockets]) => `${uid}: [${Array.from(sockets).join(', ')}]`).join('; '));
   });
   
-  // Handle messages - khôi phục lại xử lý sự kiện sendMessage
+  // Xử lý ping từ client để giữ kết nối
+  socket.on('ping', (data) => {
+    // Gửi pong response với timestamp để client tính độ trễ
+    socket.emit('pong', { timestamp: data.timestamp });
+  });
+  
+  // Handle messages - xử lý sự kiện sendMessage
   socket.on('sendMessage', (data) => {
     const { recipientId, message } = data;
     console.log('Received sendMessage event:', data);
@@ -108,17 +133,29 @@ io.on('connection', (socket) => {
       return;
     }
     
-    const recipientSocketId = connectedUsers.get(recipientId);
-    console.log(`Looking for recipient ${recipientId}, socket ID: ${recipientSocketId}`);
-    console.log('Current connected users:', Array.from(connectedUsers.entries()));
+    // In ra thông tin debug để kiểm tra socket
+    console.log('-------------- SOCKET INFO ---------------');
+    console.log('Sender ID:', message.senderId || 'Unknown');
+    console.log('Recipient ID:', recipientId);
     
-    if (recipientSocketId) {
-      console.log(`Sending message to ${recipientId} via socket ${recipientSocketId}`);
-      // Gửi tin nhắn tới người nhận
-      io.to(recipientSocketId).emit('receiveMessage', data);
+    // Thay đổi: Lấy tất cả socket IDs của người nhận
+    const recipientSocketIds = global.userSocketsMap.get(recipientId) || new Set();
+    console.log('Recipient socket IDs:', Array.from(recipientSocketIds));
+    
+    if (recipientSocketIds.size > 0) {
+      // Gửi tin nhắn đến tất cả các socket của người nhận
+      recipientSocketIds.forEach(socketId => {
+        console.log(`Emitting message to socket ${socketId} for user ${recipientId}`);
+        io.to(socketId).emit('receiveMessage', data);
+      });
+      console.log(`Socket message sent to ${recipientSocketIds.size} connections of recipient`);
     } else {
       console.log(`Recipient ${recipientId} is not connected`);
     }
+    console.log('----------------------------------------');
+    
+    // Thêm xác nhận gửi lại cho sender
+    socket.emit('messageSent', { success: true, message: 'Message sent', data });
   });
   
   // Handle notifications
@@ -130,26 +167,49 @@ io.on('connection', (socket) => {
       return;
     }
     
-    const recipientSocketId = connectedUsers.get(recipientId);
+    // Thay đổi: Gửi thông báo đến tất cả socket của người nhận
+    const recipientSocketIds = global.userSocketsMap.get(recipientId) || new Set();
     
-    if (recipientSocketId) {
-      console.log(`Sending notification to ${recipientId} via socket ${recipientSocketId}`);
-      io.to(recipientSocketId).emit('receiveNotification', notification);
+    if (recipientSocketIds.size > 0) {
+      recipientSocketIds.forEach(socketId => {
+        console.log(`Sending notification to ${recipientId} via socket ${socketId}`);
+        io.to(socketId).emit('receiveNotification', notification);
+      });
     }
   });
   
   // Handle disconnect
   socket.on('disconnect', () => {
     console.log(`Client disconnected: ${socket.id}`);
-    // Remove socket from connectedUsers
-    for (const [userId, socketId] of connectedUsers.entries()) {
-      if (socketId === socket.id) {
-        console.log(`User ${userId} disconnected`);
-        connectedUsers.delete(userId);
-        break;
+    
+    // Thay đổi: Xử lý ngắt kết nối bằng cách chỉ xóa socket hiện tại
+    const userId = socket.userId;
+    if (userId) {
+      // Xóa socket ID khỏi Set của người dùng
+      if (global.userSocketsMap && global.userSocketsMap.has(userId)) {
+        const userSockets = global.userSocketsMap.get(userId);
+        userSockets.delete(socket.id);
+        
+        // Nếu không còn socket nào, xóa người dùng khỏi Map
+        if (userSockets.size === 0) {
+          global.userSocketsMap.delete(userId);
+          // Đồng thời xóa khỏi connectedUsers cũ
+          connectedUsers.delete(userId);
+          console.log(`User ${userId} has no active connections left`);
+        } else {
+          // Cập nhật connectedUsers với socket ID mới nhất
+          const lastSocketId = Array.from(userSockets).pop();
+          connectedUsers.set(userId, lastSocketId);
+          console.log(`User ${userId} still has ${userSockets.size} active connections`);
+        }
+      }
+      
+      console.log('Connected users after disconnect:', Array.from(connectedUsers.entries()));
+      if (global.userSocketsMap) {
+        console.log('User sockets map:', Array.from(global.userSocketsMap.entries())
+          .map(([uid, sockets]) => `${uid}: [${Array.from(sockets).join(', ')}]`).join('; '));
       }
     }
-    console.log('Connected users after disconnect:', Array.from(connectedUsers.entries()));
   });
 
   // Thêm xử lý lỗi cho socket
