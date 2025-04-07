@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALEY Social Media - Fundraising Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="fundraising.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Ensure we have a favicon to prevent 404 errors -->
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <h2>ALEY Admin</h2>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html"><i class="fas fa-home"></i> Dashboard</a></li>
+                <li><a href="users.html"><i class="fas fa-users"></i> Users</a></li>
+                <li><a href="posts.html"><i class="fas fa-file-alt"></i> Posts</a></li>
+                <li><a href="comments.html"><i class="fas fa-comments"></i> Comments</a></li>
+                <li><a href="reports.html"><i class="fas fa-flag"></i> Reports</a></li>
+                <li class="active"><a href="fundraising.html"><i class="fas fa-hand-holding-usd"></i> Fundraising</a></li>
+                <li><a href="#analytics"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                <li><a href="#settings"><i class="fas fa-cog"></i> Settings</a></li>
+            </ul>
+            <div class="admin-profile">
+                <img src="https://via.placeholder.com/50" alt="Admin Profile">
+                <div>
+                    <h4>Admin User</h4>
+                    <p>Super Admin</p>
+                </div>
+            </div>
+        </nav>
+
+        <main class="content">
+            <header>
+                <div class="header-left">
+                    <h1>Fundraising Management</h1>
+                    <p>Manage fundraising campaigns and donations</p>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Search campaigns...">
+                    </div>
+                    <div class="notification">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-count">5</span>
+                    </div>
+                    <div class="logout">
+                        <button><i class="fas fa-sign-out-alt"></i> Logout</button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="fundraising-stats">
+                <div class="stat-card">
+                    <div class="stat-icon campaign">
+                        <i class="fas fa-hand-holding-usd"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Campaigns</h3>
+                        <h2 id="total-campaigns">0</h2>
+                        <p>Active campaigns</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon funds">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Total Raised</h3>
+                        <h2 id="total-raised">$0</h2>
+                        <p>From all campaigns</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon active-campaign">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Active Campaigns</h3>
+                        <h2 id="active-campaigns">0</h2>
+                        <p>Currently running</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon donation">
+                        <i class="fas fa-donate"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>Avg. Donation</h3>
+                        <h2 id="avg-donation">$0</h2>
+                        <p>Per campaign</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-container">
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="status-filter">Status:</label>
+                        <select id="status-filter">
+                            <option value="">All</option>
+                            <option value="active">Active</option>
+                            <option value="ended">Ended</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="category-filter">Category:</label>
+                        <select id="category-filter">
+                            <option value="">All</option>
+                            <option value="education">Education</option>
+                            <option value="health">Health</option>
+                            <option value="environment">Environment</option>
+                            <option value="disaster">Disaster Relief</option>
+                            <option value="community">Community</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="add-campaign-btn" class="primary-btn"><i class="fas fa-plus"></i> New Campaign</button>
+            </div>
+
+            <div class="fundraising-list">
+                <table id="campaigns-table">
+                    <thead>
+                        <tr>
+                            <th>Campaign</th>
+                            <th>Created By</th>
+                            <th>Goal</th>
+                            <th>Raised</th>
+                            <th>Progress</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>End Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="campaigns-body">
+                        <!-- Campaign data will be loaded here -->
+                    </tbody>
+                </table>
+                <div id="pagination" class="pagination">
+                    <!-- Pagination will be here -->
+                </div>
+            </div>
+
+            <!-- Add/Edit Campaign Modal -->
+            <div id="campaign-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="modal-title">Add New Campaign</h2>
+                        <span class="close">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="campaign-form">
+                            <input type="hidden" id="campaign-id">
+                            <div class="form-group">
+                                <label for="title">Title</label>
+                                <input type="text" id="title" name="title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <textarea id="description" name="description" rows="4" required></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="goal">Goal Amount</label>
+                                    <input type="number" id="goal" name="goal" min="0" step="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="category">Category</label>
+                                    <select id="category" name="category" required>
+                                        <option value="education">Education</option>
+                                        <option value="health">Health</option>
+                                        <option value="environment">Environment</option>
+                                        <option value="disaster">Disaster Relief</option>
+                                        <option value="community">Community</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="start-date">Start Date</label>
+                                    <input type="date" id="start-date" name="startDate">
+                                </div>
+                                <div class="form-group">
+                                    <label for="end-date">End Date</label>
+                                    <input type="date" id="end-date" name="endDate" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="user-id">Created By User ID (Optional)</label>
+                                <input type="text" id="user-id" name="userId">
+                            </div>
+                            <div class="form-group">
+                                <label for="image">Campaign Image</label>
+                                <input type="file" id="image" name="image" accept="image/*">
+                                <div id="image-preview" class="image-preview"></div>
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="is-active" name="isActive" checked>
+                                <label for="is-active">Active</label>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" id="save-campaign" class="primary-btn">Save Campaign</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Donation Management Modal -->
+            <div id="donation-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="donation-modal-title">Manage Donations</h2>
+                        <span class="close">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div class="donation-details">
+                            <h3 id="donation-campaign-title"></h3>
+                            <div class="donation-progress">
+                                <div class="progress-info">
+                                    <span id="donation-raised">$0</span> raised of <span id="donation-goal">$0</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div id="donation-progress-bar" class="progress"></div>
+                                </div>
+                                <div id="donation-percentage">0%</div>
+                            </div>
+                        </div>
+                        <div class="donation-controls">
+                            <button id="add-donation-btn" class="primary-btn"><i class="fas fa-plus"></i> Add Donation</button>
+                        </div>
+                        <div class="donation-list">
+                            <table id="donations-table">
+                                <thead>
+                                    <tr>
+                                        <th>Donor</th>
+                                        <th>Amount</th>
+                                        <th>Message</th>
+                                        <th>Date</th>
+                                        <th>Anonymous</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="donations-body">
+                                    <!-- Donation data will be loaded here -->
+                                </tbody>
+                            </table>
+                            <div id="donation-pagination" class="pagination">
+                                <!-- Pagination will be here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Donation Modal -->
+            <div id="add-donation-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Add Donation</h2>
+                        <span class="close">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="donation-form">
+                            <div class="form-group">
+                                <label for="donation-amount">Amount</label>
+                                <input type="number" id="donation-amount" name="amount" min="0.01" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="donation-message">Message (Optional)</label>
+                                <textarea id="donation-message" name="message" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="donation-user-id">Donor User ID (Optional)</label>
+                                <input type="text" id="donation-user-id" name="userId">
+                            </div>
+                            <div class="form-group checkbox-group">
+                                <input type="checkbox" id="donation-anonymous" name="isAnonymous">
+                                <label for="donation-anonymous">Anonymous Donation</label>
+                            </div>
+                            <div class="form-group">
+                                <button type="submit" class="primary-btn">Save Donation</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delete Confirmation Modal -->
+            <div id="confirm-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Confirm Delete</h2>
+                        <span class="close">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <p id="confirm-message">Are you sure you want to delete this item?</p>
+                        <div class="modal-buttons">
+                            <button id="confirm-cancel" class="secondary-btn">Cancel</button>
+                            <button id="confirm-delete" class="danger-btn">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Include both the general admin script and fundraising-specific script -->
+    <script src="script.js"></script>
+    <script src="fundraising.js"></script>
+</body>
+</html> 

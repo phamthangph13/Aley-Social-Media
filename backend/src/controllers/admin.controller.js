@@ -3,6 +3,7 @@ const Report = require('../models/report.model');
 const UserReport = require('../models/user-report.model');
 const Post = require('../models/post.model');
 const mongoose = require('mongoose');
+const Fundraising = require('../models/fundraising.model');
 
 // User Management Controllers
 exports.getAllUsers = async (req, res) => {
@@ -814,4 +815,490 @@ exports.deletePost = async (req, res) => {
       error: error.message
     });
   }
+};
+
+// Fundraising Management Methods
+
+/**
+ * Get all fundraising campaigns
+ */
+exports.getAllFundraisingCampaigns = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = '', category = '', status = '' } = req.query;
+    
+    // Build query filters
+    const filter = {};
+    
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    if (category && category !== 'all') {
+      filter.category = category;
+    }
+    
+    if (status) {
+      if (status === 'active') {
+        filter.isActive = true;
+        filter.endDate = { $gt: new Date() };
+      } else if (status === 'ended') {
+        filter.endDate = { $lt: new Date() };
+      } else if (status === 'inactive') {
+        filter.isActive = false;
+      }
+    }
+    
+    // Get campaigns with pagination
+    const campaigns = await Fundraising.find(filter)
+      .populate('createdBy', 'firstName lastName email profilePicture')
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit))
+      .sort({ createdAt: -1 });
+    
+    // Get total count for pagination
+    const total = await Fundraising.countDocuments(filter);
+    
+    return res.status(200).json({
+      success: true,
+      data: campaigns,
+      pagination: {
+        total,
+        page: parseInt(page),
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Error in getAllFundraisingCampaigns:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error fetching fundraising campaigns',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get fundraising campaign by ID
+ */
+exports.getFundraisingCampaignById = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+    
+    const campaign = await Fundraising.findById(campaignId)
+      .populate('createdBy', 'firstName lastName email profilePicture')
+      .populate('donors.userId', 'firstName lastName email profilePicture');
+    
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Fundraising campaign not found'
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      data: campaign
+    });
+  } catch (error) {
+    console.error('Error in getFundraisingCampaignById:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error fetching fundraising campaign',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Create new fundraising campaign
+ */
+exports.createFundraisingCampaign = async (req, res) => {
+  try {
+    const { title, description, goal, startDate, endDate, category, userId } = req.body;
+    
+    // Validate required fields
+    if (!title || !description || !goal || !endDate || !category) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required fields'
+      });
+    }
+    
+    // Create new campaign
+    const newCampaign = new Fundraising({
+      title,
+      description,
+      goal: parseFloat(goal),
+      startDate: startDate || new Date(),
+      endDate,
+      category,
+      createdBy: userId || req.body.createdBy,
+      raised: 0,
+      isActive: true
+    });
+    
+    // Handle image if provided
+    if (req.body.image && req.body.imageType) {
+      newCampaign.image = Buffer.from(req.body.image, 'base64');
+      newCampaign.imageType = req.body.imageType;
+    }
+    
+    await newCampaign.save();
+    
+    return res.status(201).json({
+      success: true,
+      message: 'Fundraising campaign created successfully',
+      data: newCampaign
+    });
+  } catch (error) {
+    console.error('Error in createFundraisingCampaign:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error creating fundraising campaign',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Update fundraising campaign
+ */
+exports.updateFundraisingCampaign = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+    const { title, description, goal, startDate, endDate, category, isActive } = req.body;
+    
+    const campaign = await Fundraising.findById(campaignId);
+    
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Fundraising campaign not found'
+      });
+    }
+    
+    // Update fields
+    if (title) campaign.title = title;
+    if (description) campaign.description = description;
+    if (goal) campaign.goal = parseFloat(goal);
+    if (startDate) campaign.startDate = startDate;
+    if (endDate) campaign.endDate = endDate;
+    if (category) campaign.category = category;
+    if (isActive !== undefined) campaign.isActive = isActive;
+    
+    // Handle image if provided
+    if (req.body.image && req.body.imageType) {
+      campaign.image = Buffer.from(req.body.image, 'base64');
+      campaign.imageType = req.body.imageType;
+    }
+    
+    await campaign.save();
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Fundraising campaign updated successfully',
+      data: campaign
+    });
+  } catch (error) {
+    console.error('Error in updateFundraisingCampaign:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error updating fundraising campaign',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Delete fundraising campaign
+ */
+exports.deleteFundraisingCampaign = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+    
+    const campaign = await Fundraising.findByIdAndDelete(campaignId);
+    
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Fundraising campaign not found'
+      });
+    }
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Fundraising campaign deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error in deleteFundraisingCampaign:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error deleting fundraising campaign',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get campaign donations
+ */
+exports.getCampaignDonations = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    
+    const campaign = await Fundraising.findById(campaignId)
+      .populate('donors.userId', 'firstName lastName email profilePicture');
+    
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Fundraising campaign not found'
+      });
+    }
+    
+    // Paginate donors
+    const startIndex = (parseInt(page) - 1) * parseInt(limit);
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedDonors = campaign.donors.slice(startIndex, endIndex);
+    
+    return res.status(200).json({
+      success: true,
+      data: paginatedDonors,
+      pagination: {
+        total: campaign.donors.length,
+        page: parseInt(page),
+        pages: Math.ceil(campaign.donors.length / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Error in getCampaignDonations:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error fetching campaign donations',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Add donation to campaign
+ */
+exports.addDonation = async (req, res) => {
+  try {
+    const { campaignId } = req.params;
+    const { userId, amount, message, isAnonymous = false } = req.body;
+    
+    if (!amount || parseFloat(amount) <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid donation amount'
+      });
+    }
+    
+    const campaign = await Fundraising.findById(campaignId);
+    
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Fundraising campaign not found'
+      });
+    }
+    
+    // Create donation object
+    const donation = {
+      userId: userId || null,
+      amount: parseFloat(amount),
+      message: message || '',
+      date: new Date(),
+      isAnonymous
+    };
+    
+    // Add donation to campaign
+    campaign.donors.push(donation);
+    campaign.raised += parseFloat(amount);
+    
+    await campaign.save();
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Donation added successfully',
+      data: {
+        donation,
+        campaignRaised: campaign.raised,
+        percentageRaised: campaign.percentageRaised
+      }
+    });
+  } catch (error) {
+    console.error('Error in addDonation:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error adding donation',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Remove donation from campaign
+ */
+exports.removeDonation = async (req, res) => {
+  try {
+    const { campaignId, donationId } = req.params;
+    
+    const campaign = await Fundraising.findById(campaignId);
+    
+    if (!campaign) {
+      return res.status(404).json({
+        success: false,
+        message: 'Fundraising campaign not found'
+      });
+    }
+    
+    // Find donation
+    const donationIndex = campaign.donors.findIndex(d => d._id.toString() === donationId);
+    
+    if (donationIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: 'Donation not found'
+      });
+    }
+    
+    const donationAmount = campaign.donors[donationIndex].amount;
+    
+    // Remove donation
+    campaign.donors.splice(donationIndex, 1);
+    campaign.raised = Math.max(0, campaign.raised - donationAmount);
+    
+    await campaign.save();
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Donation removed successfully',
+      data: {
+        campaignRaised: campaign.raised,
+        percentageRaised: campaign.percentageRaised
+      }
+    });
+  } catch (error) {
+    console.error('Error in removeDonation:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error removing donation',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get fundraising statistics
+ */
+exports.getFundraisingStatistics = async (req, res) => {
+  try {
+    // Total campaigns
+    const totalCampaigns = await Fundraising.countDocuments();
+    
+    // Active campaigns
+    const activeCampaigns = await Fundraising.countDocuments({
+      isActive: true,
+      endDate: { $gt: new Date() }
+    });
+    
+    // Ended campaigns
+    const endedCampaigns = await Fundraising.countDocuments({
+      endDate: { $lt: new Date() }
+    });
+    
+    // Total amount raised
+    const campaigns = await Fundraising.find();
+    const totalRaised = campaigns.reduce((sum, campaign) => sum + campaign.raised, 0);
+    
+    // Average donation
+    const allDonations = campaigns.flatMap(campaign => campaign.donors);
+    const avgDonation = allDonations.length ? 
+      allDonations.reduce((sum, donation) => sum + donation.amount, 0) / allDonations.length : 0;
+    
+    // Campaign success rate (reached goal)
+    const successfulCampaigns = campaigns.filter(c => c.raised >= c.goal).length;
+    const successRate = totalCampaigns ? (successfulCampaigns / totalCampaigns) * 100 : 0;
+    
+    // Categories breakdown
+    const categories = ['education', 'health', 'environment', 'disaster', 'community', 'other'];
+    const categoryStats = {};
+    
+    for (const category of categories) {
+      const count = await Fundraising.countDocuments({ category });
+      const campaignsInCategory = await Fundraising.find({ category });
+      const raisedInCategory = campaignsInCategory.reduce((sum, c) => sum + c.raised, 0);
+      
+      categoryStats[category] = {
+        count,
+        raised: raisedInCategory
+      };
+    }
+    
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalCampaigns,
+        activeCampaigns,
+        endedCampaigns,
+        totalRaised,
+        avgDonation,
+        successfulCampaigns,
+        successRate,
+        categoryStats
+      }
+    });
+  } catch (error) {
+    console.error('Error in getFundraisingStatistics:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error fetching fundraising statistics',
+      error: error.message
+    });
+  }
+};
+
+// Make sure to export all controller functions
+module.exports = {
+  // User Management Controllers
+  getAllUsers: exports.getAllUsers,
+  getUserById: exports.getUserById,
+  createUser: exports.createUser,
+  updateUser: exports.updateUser,
+  deleteUser: exports.deleteUser,
+  updateUserStatus: exports.updateUserStatus,
+  
+  // Post Management Controllers
+  getAllPosts: exports.getAllPosts,
+  getPostById: exports.getPostById,
+  updatePost: exports.updatePost,
+  deletePost: exports.deletePost,
+  
+  // Report Management Controllers
+  getAllPostReports: exports.getAllPostReports,
+  getAllUserReports: exports.getAllUserReports,
+  updatePostReportStatus: exports.updatePostReportStatus,
+  updateUserReportStatus: exports.updateUserReportStatus,
+  deletePostReport: exports.deletePostReport,
+  deleteUserReport: exports.deleteUserReport,
+  
+  // Dashboard Statistics
+  getDashboardStatistics: exports.getDashboardStatistics,
+  
+  // Fundraising Management Controllers
+  getAllFundraisingCampaigns: exports.getAllFundraisingCampaigns,
+  getFundraisingCampaignById: exports.getFundraisingCampaignById,
+  createFundraisingCampaign: exports.createFundraisingCampaign,
+  updateFundraisingCampaign: exports.updateFundraisingCampaign,
+  deleteFundraisingCampaign: exports.deleteFundraisingCampaign,
+  getCampaignDonations: exports.getCampaignDonations,
+  addDonation: exports.addDonation,
+  removeDonation: exports.removeDonation,
+  getFundraisingStatistics: exports.getFundraisingStatistics
 }; 

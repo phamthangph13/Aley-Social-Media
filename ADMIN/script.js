@@ -3,6 +3,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add active class to the current nav item
     const navItems = document.querySelectorAll('.nav-menu li');
     
+    // Highlight the current page in the navigation
+    const currentPage = window.location.pathname.split('/').pop();
+    navItems.forEach(item => {
+        const link = item.querySelector('a');
+        if (link.getAttribute('href') === currentPage) {
+            // Remove active class from all items
+            navItems.forEach(el => el.classList.remove('active'));
+            // Add active class to current page
+            item.classList.add('active');
+        }
+    });
+    
     navItems.forEach(item => {
         item.addEventListener('click', function() {
             // Remove active class from all items
@@ -17,6 +29,15 @@ document.addEventListener('DOMContentLoaded', function() {
             headerTitle.textContent = headerText;
         });
     });
+    
+    // Specific handling for fundraising link
+    const fundraisingLink = document.querySelector('.nav-menu li a[href="fundraising.html"]');
+    if (fundraisingLink) {
+        fundraisingLink.addEventListener('click', function(e) {
+            console.log('Fundraising link clicked');
+            window.location.href = 'fundraising.html';
+        });
+    }
     
     // Notification click handler
     const notification = document.querySelector('.notification');

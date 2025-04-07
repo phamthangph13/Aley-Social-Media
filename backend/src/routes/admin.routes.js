@@ -26,6 +26,17 @@ router.put('/reports/users/:reportId', adminController.updateUserReportStatus);
 router.delete('/reports/posts/:reportId', adminController.deletePostReport);
 router.delete('/reports/users/:reportId', adminController.deleteUserReport);
 
+// Fundraising management routes
+router.get('/fundraising', adminController.getAllFundraisingCampaigns);
+router.get('/fundraising/:campaignId', adminController.getFundraisingCampaignById);
+router.post('/fundraising', adminController.createFundraisingCampaign);
+router.put('/fundraising/:campaignId', adminController.updateFundraisingCampaign);
+router.delete('/fundraising/:campaignId', adminController.deleteFundraisingCampaign);
+router.get('/fundraising/:campaignId/donations', adminController.getCampaignDonations);
+router.post('/fundraising/:campaignId/donations', adminController.addDonation);
+router.delete('/fundraising/:campaignId/donations/:donationId', adminController.removeDonation);
+router.get('/fundraising-statistics', adminController.getFundraisingStatistics);
+
 // Dashboard statistics
 router.get('/statistics', adminController.getDashboardStatistics);
 
