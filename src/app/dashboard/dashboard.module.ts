@@ -39,6 +39,14 @@ const routes: Routes = [
         loadChildren: () => import('./pages/help-center/help-center.module').then(m => m.HelpCenterModule)
       },
       { 
+        path: 'fundraising',
+        loadChildren: () => import('./pages/fundraising/fundraising.module').then(m => m.FundraisingModule)
+      },
+      { 
+        path: 'aley-ask',
+        loadChildren: () => import('./pages/aley-ask/aley-ask.module').then(m => m.AleyAskModule)
+      },
+      { 
         path: 'user/:id',
         loadChildren: () => import('./pages/user-profile/user-profile.module').then(m => m.UserProfileModule)
       },

@@ -29,7 +29,7 @@ interface UserSettings {
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css'],
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink]
+  imports: [CommonModule, ReactiveFormsModule]
 })
 export class SettingsComponent implements OnInit {
   isLoading = false;

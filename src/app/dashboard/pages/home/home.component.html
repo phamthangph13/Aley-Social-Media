@@ -104,13 +104,13 @@
     <div class="post-list">
       <div *ngFor="let post of posts" class="post-card">
         <div class="post-header">
-          <img [src]="getAvatarUrl(post.user._id)" 
+          <img [src]="getAvatarUrl(post.user?._id)" 
                alt="User Avatar" 
                class="avatar"
-               (click)="navigateToProfile(post.user._id)" />
+               (click)="navigateToProfile(post.user?._id)" />
           <div class="post-info">
-            <h4 (click)="navigateToProfile(post.user._id)" class="user-name">
-              {{ post.user.firstName }} {{ post.user.lastName }}
+            <h4 (click)="navigateToProfile(post.user?._id)" class="user-name">
+              {{ post.user?.firstName }} {{ post.user?.lastName }}
             </h4>
             <div class="post-meta">
               <span class="post-time">{{ formatTimeAgo(post.createdAt) }}</span>
@@ -171,12 +171,12 @@
         </div>
         
         <div class="post-stats">
-          <span class="likes-count">{{ post.likes.length }} lượt thích</span>
-          <span class="comments-count">{{ post.comments.length }} bình luận</span>
+          <span class="likes-count">{{ post.likes?.length || 0 }} lượt thích</span>
+          <span class="comments-count">{{ post.comments?.length || 0 }} bình luận</span>
         </div>
         
         <div class="post-actions">
-          <button class="action-btn" [class.active]="post.likes.includes(currentUser?._id)" (click)="toggleLike(post)">
+          <button class="action-btn" [class.active]="post.likes?.includes(currentUser?._id)" (click)="toggleLike(post)">
             <i class="fa" [class.fa-thumbs-up]="true"></i> Thích
           </button>
           <button class="action-btn" (click)="post.showComments = !post.showComments">

@@ -383,23 +383,30 @@ export class HomeComponent implements OnInit {
   }
 
   toggleLike(post: Post): void {
+    if (!this.currentUser) {
+      this.toastr.info('Vui lòng đăng nhập để thích bài viết.');
+      return;
+    }
+    
+    const userId = this.currentUser._id;
+    
+    if (!post.likes) {
+      post.likes = [];
+    }
+    
+    const isLiked = post.likes.includes(userId);
+    
     this.postService.toggleLike(post._id).subscribe({
       next: (response) => {
-        const index = this.posts.findIndex(p => p._id === post._id);
-        if (index > -1) {
-          // Update likes count
-          if (post.likes.includes(this.currentUser._id)) {
-            // Unlike the post
-            this.posts[index].likes = this.posts[index].likes.filter(id => id !== this.currentUser._id);
-          } else {
-            // Like the post
-            this.posts[index].likes.push(this.currentUser._id);
-          }
+        if (isLiked) {
+          post.likes = post.likes.filter(id => id !== userId);
+        } else {
+          post.likes.push(userId);
         }
       },
-      error: (error: any) => {
+      error: (error) => {
         console.error('Error toggling like:', error);
-        this.toastr.error('Không thể thực hiện thao tác. Vui lòng thử lại sau.');
+        this.toastr.error('Không thể thích bài viết. Vui lòng thử lại sau.');
       }
     });
   }
@@ -440,7 +447,10 @@ export class HomeComponent implements OnInit {
   }
 
   isPostOwner(post: Post): boolean {
-    return this.currentUser && post.user._id === this.currentUser._id;
+    if (!post || !post.user || !this.currentUser) {
+      return false;
+    }
+    return String(post.user._id) === String(this.currentUser._id);
   }
 
   getPrivacyIcon(privacy: string): string {
@@ -486,30 +496,19 @@ export class HomeComponent implements OnInit {
     return `${years} năm trước`;
   }
 
-  getAvatarUrl(userId: string): string {
-    // Sử dụng timestamp cache thay vì tạo mới
-    return `${environment.apiUrl}/profile/${userId}/avatar?t=${this.timestampCache}`;
+  getAvatarUrl(userId: string | undefined): string {
+    if (!userId) {
+      return 'assets/images/default-avatar.png';
+    }
+    // Add a cache buster to prevent image caching issues
+    return `${environment.apiUrl}/users/${userId}/avatar?t=${this.timestampCache}`;
   }
 
-  // Chuyển hướng đến profile người dùng
-  navigateToProfile(userId: string): void {
-    if (!userId) return;
-    
-    // Add debug logging
-    console.log('Home navigateToProfile:', {
-      userId,
-      currentUserId: this.currentUser?._id || this.currentUser?.id,
-      isEqual: String(userId) === String(this.currentUser?._id || this.currentUser?.id)
-    });
-    
-    // Ensure we check if this is current user with normalized string comparison
-    if (this.currentUser && (String(userId) === String(this.currentUser._id) || String(userId) === String(this.currentUser.id))) {
-      console.log('Home: Navigating to own profile');
-      this.router.navigate(['/dashboard/profile']);
-    } else {
-      // Fallback to the service which should handle this correctly
-      this.profileNavigator.navigateToProfile(userId);
+  navigateToProfile(userId: string | undefined): void {
+    if (!userId) {
+      return;
     }
+    this.profileNavigator.navigateToProfile(userId);
   }
   
   // Kiểm tra xem có phải người dùng hiện tại không

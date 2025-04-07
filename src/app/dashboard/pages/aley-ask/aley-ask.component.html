@@ -1,0 +1,80 @@
+<div class="chat-container">
+  <div class="chat-main">
+    <div class="chat-header">
+      <h1>Aley Ask với Llama 3</h1>
+      <p>Hỏi bất cứ điều gì và nhận câu trả lời thông minh từ Llama 3</p>
+      <div class="model-badge">
+        <span class="model-name">Llama3-70B-8192</span>
+        <span class="model-company">Meta AI</span>
+      </div>
+    </div>
+
+    <div class="chat-messages" #chatMessages>
+      <div class="welcome-message" *ngIf="messages.length === 0">
+        <h2>Xin chào! Tôi là Aley Ask với Llama 3</h2>
+        <p>Tôi là mô hình AI thông minh phát triển bởi Meta AI, có thể giúp bạn trả lời câu hỏi, viết nội dung, giải thích khái niệm và nhiều hơn nữa.</p>
+        <div class="example-questions">
+          <h3>Một số câu hỏi gợi ý:</h3>
+          <div class="question-buttons">
+            <button (click)="askQuestion('Giải thích về mô hình Llama 3 và khả năng của nó')">
+              Giải thích về mô hình Llama 3 và khả năng của nó
+            </button>
+            <button (click)="askQuestion('Làm thế nào để tạo một bài viết hấp dẫn?')">
+              Làm thế nào để tạo một bài viết hấp dẫn?
+            </button>
+            <button (click)="askQuestion('Các lời khuyên để tăng người theo dõi trên Aley')">
+              Các lời khuyên để tăng người theo dõi trên Aley
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="error-message" *ngIf="errorMessage">
+        <div class="alert alert-danger">
+          <i class="fa fa-exclamation-circle"></i>
+          {{ errorMessage }}
+        </div>
+      </div>
+
+      <div class="message-container" *ngFor="let message of messages">
+        <div class="message" [ngClass]="{'user-message': message.sender === 'user', 'bot-message': message.sender === 'bot'}">
+          <div class="message-avatar">
+            <img [src]="message.sender === 'user' ? 'https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y' : 'https://www.gravatar.com/avatar/11111111111111111111111111111111?d=identicon&f=y'" alt="Avatar">
+          </div>
+          <div class="message-content">
+            <div class="message-text" [innerHTML]="message.text"></div>
+            <div class="message-meta">
+              <div class="message-time">{{ message.time | date:'HH:mm' }}</div>
+              <div class="message-model" *ngIf="message.sender === 'bot'">Llama 3</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="typing-indicator" *ngIf="isTyping">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+
+    <div class="chat-input">
+      <form (ngSubmit)="sendMessage()">
+        <textarea 
+          [(ngModel)]="newMessage" 
+          name="message" 
+          placeholder="Nhập câu hỏi của bạn cho Llama 3..." 
+          rows="1"
+          (input)="adjustTextareaHeight($event)"
+          #messageInput></textarea>
+        <button type="submit" [disabled]="!newMessage.trim() || isTyping">
+          <i class="fa fa-paper-plane"></i>
+        </button>
+      </form>
+      <div class="input-hint">
+        <i class="fa fa-info-circle"></i>
+        <span>Nhấn Enter để gửi, Shift+Enter để xuống dòng</span>
+      </div>
+    </div>
+  </div>
+</div>
