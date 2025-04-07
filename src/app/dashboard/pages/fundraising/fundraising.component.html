@@ -2,56 +2,150 @@
   <div class="header">
     <h1>Gây quỹ</h1>
     <p>Hỗ trợ các dự án cộng đồng và giúp đỡ những người xung quanh bạn</p>
-    <button class="create-button">Tạo chiến dịch gây quỹ mới</button>
+    <button class="create-button" (click)="toggleCreateForm()">Tạo chiến dịch gây quỹ mới</button>
   </div>
 
-  <div class="campaigns">
-    <div class="campaign-card">
-      <img src="assets/images/fundraising-1.jpg" alt="Fundraising Campaign" class="campaign-image">
-      <div class="campaign-content">
-        <h2>Giúp đỡ trẻ em vùng cao</h2>
-        <div class="progress-bar">
-          <div class="progress" style="width: 75%"></div>
-        </div>
-        <div class="progress-stats">
-          <span>75% đạt được</span>
-          <span>150.000.000đ / 200.000.000đ</span>
-        </div>
-        <p class="campaign-description">Quyên góp xây dựng trường học mới cho trẻ em vùng cao, nơi các em phải đi bộ hàng giờ mỗi ngày để đến lớp.</p>
-        <button class="donate-button">Quyên góp ngay</button>
-      </div>
+  <!-- Search and filter section -->
+  <div class="filter-section">
+    <div class="search-box">
+      <input 
+        type="text" 
+        placeholder="Tìm kiếm chiến dịch..." 
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="applyFilters()"
+      >
+      <button (click)="applyFilters()">Tìm kiếm</button>
     </div>
+    <div class="category-filter">
+      <label for="category">Lĩnh vực:</label>
+      <select id="category" [(ngModel)]="selectedCategory" (change)="applyFilters()">
+        <option value="all">Tất cả</option>
+        <option *ngFor="let cat of campaignCategories" [value]="cat.value">{{ cat.label }}</option>
+      </select>
+    </div>
+  </div>
 
-    <div class="campaign-card">
-      <img src="assets/images/fundraising-2.jpg" alt="Fundraising Campaign" class="campaign-image">
-      <div class="campaign-content">
-        <h2>Hỗ trợ nạn nhân lũ lụt</h2>
-        <div class="progress-bar">
-          <div class="progress" style="width: 45%"></div>
+  <!-- Create campaign form -->
+  <div class="create-form" *ngIf="showCreateForm">
+    <h2>Tạo chiến dịch gây quỹ mới</h2>
+    <form [formGroup]="createForm" (ngSubmit)="createCampaign()">
+      <div class="form-group">
+        <label for="title">Tiêu đề</label>
+        <input type="text" id="title" formControlName="title">
+        <div class="error" *ngIf="createForm.get('title')?.invalid && createForm.get('title')?.touched">
+          Vui lòng nhập tiêu đề ít nhất 5 ký tự
         </div>
-        <div class="progress-stats">
-          <span>45% đạt được</span>
-          <span>90.000.000đ / 200.000.000đ</span>
-        </div>
-        <p class="campaign-description">Quyên góp giúp đỡ những người dân bị ảnh hưởng bởi lũ lụt tại miền Trung, đang cần hỗ trợ khẩn cấp về thực phẩm và chỗ ở.</p>
-        <button class="donate-button">Quyên góp ngay</button>
       </div>
-    </div>
+      
+      <div class="form-group">
+        <label for="description">Mô tả</label>
+        <textarea id="description" formControlName="description" rows="5"></textarea>
+        <div class="error" *ngIf="createForm.get('description')?.invalid && createForm.get('description')?.touched">
+          Vui lòng nhập mô tả ít nhất 20 ký tự
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="goal">Mục tiêu (VNĐ)</label>
+        <input type="number" id="goal" formControlName="goal">
+        <div class="error" *ngIf="createForm.get('goal')?.invalid && createForm.get('goal')?.touched">
+          Vui lòng nhập số tiền mục tiêu (tối thiểu 1.000.000 VNĐ)
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="endDate">Ngày kết thúc</label>
+        <input type="date" id="endDate" formControlName="endDate">
+        <div class="error" *ngIf="createForm.get('endDate')?.invalid && createForm.get('endDate')?.touched">
+          Vui lòng chọn ngày kết thúc
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="category">Lĩnh vực</label>
+        <select id="category" formControlName="category">
+          <option value="">-- Chọn lĩnh vực --</option>
+          <option *ngFor="let cat of campaignCategories" [value]="cat.value">{{ cat.label }}</option>
+        </select>
+        <div class="error" *ngIf="createForm.get('category')?.invalid && createForm.get('category')?.touched">
+          Vui lòng chọn lĩnh vực
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="image">Hình ảnh</label>
+        <input type="file" id="image" (change)="onFileSelect($event)" accept="image/*">
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" (click)="toggleCreateForm()">Hủy</button>
+        <button type="submit" [disabled]="createForm.invalid || loading">Tạo chiến dịch</button>
+      </div>
+    </form>
+  </div>
 
-    <div class="campaign-card">
-      <img src="assets/images/fundraising-3.jpg" alt="Fundraising Campaign" class="campaign-image">
+  <!-- Loading indicator -->
+  <div class="loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Đang tải...</p>
+  </div>
+
+  <!-- Error message -->
+  <div class="error-message" *ngIf="error">
+    {{ error }}
+  </div>
+
+  <!-- Display campaigns -->
+  <div class="campaigns" *ngIf="!loading && campaigns.length > 0">
+    <div class="campaign-card" *ngFor="let campaign of campaigns">
+      <div class="campaign-image-container">
+        <img [src]="getCampaignImageUrl(campaign._id)" [alt]="campaign.title" class="campaign-image"
+             (error)="handleImageError($event)" onerror="this.src='assets/images/default-campaign.png'">
+      </div>
       <div class="campaign-content">
-        <h2>Hỗ trợ nghiên cứu y tế</h2>
+        <h2>{{ campaign.title }}</h2>
+        
+        <!-- Thêm avatar của người tạo chiến dịch -->
+        <div class="campaign-creator" *ngIf="campaign.createdBy">
+          <img [src]="getAvatarUrl(campaign.createdBy._id)" alt="Creator avatar" class="creator-avatar"
+               onerror="this.src='assets/images/default-avatar.png'">
+          <span>{{ campaign.createdBy.firstName }} {{ campaign.createdBy.lastName || 'Người dùng Aley' }}</span>
+        </div>
+        
         <div class="progress-bar">
-          <div class="progress" style="width: 30%"></div>
+          <div class="progress" [style.width.%]="campaign.percentageRaised"></div>
         </div>
         <div class="progress-stats">
-          <span>30% đạt được</span>
-          <span>150.000.000đ / 500.000.000đ</span>
+          <span>{{ campaign.percentageRaised }}% đạt được</span>
+          <span>{{ campaign.raised | number }} / {{ campaign.goal | number }}đ</span>
         </div>
-        <p class="campaign-description">Quyên góp hỗ trợ các nhà nghiên cứu y tế trong việc tìm ra phương pháp điều trị mới cho bệnh ung thư.</p>
-        <button class="donate-button">Quyên góp ngay</button>
+        <p class="campaign-description">{{ campaign.description }}</p>
+        <a [routerLink]="['/dashboard/fundraising', campaign._id]" class="donate-button">Quyên góp ngay</a>
       </div>
     </div>
+  </div>
+
+  <!-- No campaigns message -->
+  <div class="no-results" *ngIf="!loading && campaigns.length === 0">
+    <p>Không tìm thấy chiến dịch gây quỹ nào.</p>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button 
+      [disabled]="currentPage === 1" 
+      (click)="changePage(currentPage - 1)"
+    >
+      Trước
+    </button>
+    
+    <span>Trang {{ currentPage }} / {{ totalPages }}</span>
+    
+    <button 
+      [disabled]="currentPage === totalPages" 
+      (click)="changePage(currentPage + 1)"
+    >
+      Sau
+    </button>
   </div>
 </div>

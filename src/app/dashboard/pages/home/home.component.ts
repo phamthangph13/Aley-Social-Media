@@ -500,8 +500,8 @@ export class HomeComponent implements OnInit {
     if (!userId) {
       return 'assets/images/default-avatar.png';
     }
-    // Add a cache buster to prevent image caching issues
-    return `${environment.apiUrl}/users/${userId}/avatar?t=${this.timestampCache}`;
+    // Sửa đường dẫn để phù hợp với các component khác
+    return `${environment.apiUrl}/profile/${userId}/avatar?t=${this.timestampCache}`;
   }
 
   navigateToProfile(userId: string | undefined): void {

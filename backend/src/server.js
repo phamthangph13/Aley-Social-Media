@@ -16,6 +16,7 @@ const blockRoutes = require('./routes/block.routes');
 const reportsRoutes = require('./routes/reports.routes');
 const userReportsRoutes = require('./routes/user-reports.routes');
 const adminRoutes = require('./routes/admin.routes');
+const fundraisingRoutes = require('./routes/fundraising.routes');
 
 // Initialize Express app
 const app = express();
@@ -230,6 +231,7 @@ app.use('/api/block', blockRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/user-reports', userReportsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/fundraising', fundraisingRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
