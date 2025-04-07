@@ -34,6 +34,14 @@
 
         <div class="tab-content">
           <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+            <div *ngIf="error" class="alert alert-danger">
+              {{ error }}
+            </div>
+            
+            <div *ngIf="success" class="alert alert-success">
+              Registration successful! Please check your email to verify your account.
+            </div>
+
             <div class="form-row">
               <div class="form-group">
                 <label for="firstName">First Name</label>

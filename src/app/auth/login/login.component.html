@@ -37,6 +37,10 @@
             <div *ngIf="error" class="alert alert-danger">
               {{ error }}
             </div>
+            
+            <div *ngIf="successMessage" class="alert alert-success">
+              {{ successMessage }}
+            </div>
 
             <div class="form-group">
               <label for="email">Email</label>

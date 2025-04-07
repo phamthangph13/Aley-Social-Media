@@ -20,7 +20,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB max file size
+    fileSize: 100 * 1024 * 1024, // 50MB max file size
   },
   fileFilter
 });
@@ -102,7 +102,7 @@ exports.createPost = async (req, res) => {
 // Get all posts (with pagination)
 exports.getPosts = async (req, res) => {
   try {
-    const { page = 1, limit = 10, userId } = req.query;
+    const { page = 1, limit = 10, userId, random = false } = req.query;
     const skip = (page - 1) * limit;
     
     // Lấy thông tin về người dùng hiện tại, bao gồm danh sách người đã chặn
@@ -154,26 +154,148 @@ exports.getPosts = async (req, res) => {
       };
     }
     
-    // Fetch posts with user information
-    const posts = await Post.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(parseInt(limit))
-      .populate({
-        path: 'user',
-        select: 'firstName lastName avatar avatarType'
-      })
-      .populate({
-        path: 'comments.user',
-        select: 'firstName lastName avatar avatarType'
-      });
+    let posts;
+    let totalPosts;
     
     // Count total posts for pagination
-    const totalPosts = await Post.countDocuments(query);
+    totalPosts = await Post.countDocuments(query);
+
+    if (random === 'true') {
+      // Use aggregation with $sample to get random posts but with optimized lookup
+      posts = await Post.aggregate([
+        { $match: query },
+        { $sample: { size: parseInt(limit) } },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'user',
+            // Limit the fields from users to reduce data size
+            pipeline: [
+              { 
+                $project: { 
+                  firstName: 1, 
+                  lastName: 1, 
+                  avatar: 1, 
+                  avatarType: 1
+                } 
+              }
+            ]
+          }
+        },
+        { $unwind: '$user' },
+        // Optimize comments by limiting the number of comments loaded
+        { $addFields: { 
+            limitedComments: { $slice: ['$comments', 0, 5] } // Only take first 5 comments per post
+        }},
+        { $set: { comments: '$limitedComments' }},
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'comments.user',
+            foreignField: '_id',
+            as: 'commentUsers',
+            // Limit the fields from comment users
+            pipeline: [
+              { 
+                $project: { 
+                  _id: 1, 
+                  firstName: 1, 
+                  lastName: 1, 
+                  avatar: 1, 
+                  avatarType: 1
+                } 
+              }
+            ]
+          }
+        }
+      ]);
+      
+      // Process comments users
+      posts = posts.map(post => {
+        if (post.comments && post.comments.length > 0) {
+          post.comments.forEach(comment => {
+            const commentUser = post.commentUsers.find(
+              u => u._id.toString() === comment.user.toString()
+            );
+            if (commentUser) {
+              comment.user = {
+                _id: commentUser._id,
+                firstName: commentUser.firstName,
+                lastName: commentUser.lastName,
+                avatar: commentUser.avatar,
+                avatarType: commentUser.avatarType
+              };
+            }
+          });
+        }
+        delete post.commentUsers;
+        return post;
+      });
+    } else {
+      // Fetch posts with user information in chronological order
+      posts = await Post.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .populate({
+          path: 'user',
+          select: 'firstName lastName avatar avatarType'
+        })
+        .populate({
+          path: 'comments.user',
+          select: 'firstName lastName avatar avatarType',
+          // Limit the number of populated comments
+          options: { limit: 5 } 
+        });
+    }
     
     // Format each post and ensure avatarUrl is included
     const formattedPosts = posts.map(post => {
-      const formattedPost = post.getFormattedPost();
+      let formattedPost;
+      
+      if (random === 'true') {
+        // For aggregation results, manually format
+        formattedPost = {
+          _id: post._id,
+          content: post.content,
+          likes: post.likes,
+          comments: post.comments || [],
+          hashtags: post.hashtags || [],
+          emotion: post.emotion,
+          privacy: post.privacy,
+          createdAt: post.createdAt,
+          updatedAt: post.updatedAt,
+          user: {
+            _id: post.user._id,
+            firstName: post.user.firstName,
+            lastName: post.user.lastName
+          }
+        };
+        
+        // Add image URLs if present
+        if (post.images && post.images.length > 0) {
+          formattedPost.imageUrls = post.images.map(img => 
+            `data:${img.contentType};base64,${img.data.toString('base64')}`
+          );
+        }
+        
+        // Add video URLs if present
+        if (post.videos && post.videos.length > 0) {
+          formattedPost.videoUrls = post.videos.map(video => {
+            if (video.path) {
+              return video.path;
+            } else if (video.data) {
+              return `data:${video.contentType};base64,${video.data.toString('base64')}`;
+            }
+            return null;
+          }).filter(url => url !== null);
+        }
+      } else {
+        // Use existing method for normal find results
+        formattedPost = post.getFormattedPost();
+      }
       
       // Make sure user has avatarUrl
       if (post.user) {

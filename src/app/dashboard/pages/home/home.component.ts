@@ -39,6 +39,7 @@ export class HomeComponent implements OnInit {
   showReportModal = false;
   reportingPost: Post | null = null;
   isSubmittingReport = false;
+  randomMode = false;
   emotions = [
     { value: 'none', label: 'Không có' },
     { value: 'happy', label: 'Vui vẻ 😊' },
@@ -107,7 +108,7 @@ export class HomeComponent implements OnInit {
 
   loadPosts(): void {
     this.isLoading = true;
-    this.postService.getPosts(this.page, this.limit).subscribe({
+    this.postService.getPosts(this.page, this.limit, false).subscribe({
       next: (response) => {
         this.posts = response.posts;
         this.totalPosts = response.totalPosts;
@@ -429,19 +430,25 @@ export class HomeComponent implements OnInit {
   }
 
   loadMorePosts(): void {
-    this.page++;
-    this.isLoading = true;
+    if (this.isLoading) return;
     
-    this.postService.getPosts(this.page, this.limit).subscribe({
+    // In non-random mode, load next page and append to existing posts
+    this.isLoading = true;
+    this.page += 1;
+    
+    this.postService.getPosts(this.page, this.limit, false).subscribe({
       next: (response) => {
+        // Append new posts to existing ones
         this.posts = [...this.posts, ...response.posts];
+        this.totalPosts = response.totalPosts;
         this.isLoading = false;
       },
       error: (error: any) => {
         console.error('Error loading more posts:', error);
         this.toastr.error('Không thể tải thêm bài viết. Vui lòng thử lại sau.');
         this.isLoading = false;
-        this.page--; // Revert page increment
+        // Revert page increment on error
+        this.page -= 1;
       }
     });
   }

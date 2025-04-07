@@ -90,9 +90,11 @@
   
   <!-- Posts List -->
   <div class="content-section">
-    <h3>Bài viết mới nhất</h3>
+    <div class="section-header">
+      <h3>Bài viết mới nhất</h3>
+    </div>
     
-    <div *ngIf="isLoading" class="loading">
+    <div *ngIf="isLoading && posts.length === 0" class="loading">
       <div class="spinner"></div>
       <p>Đang tải bài viết...</p>
     </div>
@@ -223,8 +225,15 @@
     <!-- Load More Button -->
     <div *ngIf="posts.length > 0 && posts.length < totalPosts" class="load-more">
       <button class="btn-load-more" (click)="loadMorePosts()" [disabled]="isLoading">
-        Tải thêm bài viết
+        <span *ngIf="isLoading" class="spinner-small"></span>
+        <span *ngIf="!isLoading">Tải thêm bài viết</span>
       </button>
+    </div>
+    
+    <!-- Bottom Loading Indicator -->
+    <div *ngIf="isLoading && posts.length > 0" class="loading-more">
+      <div class="spinner"></div>
+      <p>Đang tải thêm bài viết...</p>
     </div>
   </div>
 </div>

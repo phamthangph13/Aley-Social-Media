@@ -21,6 +21,7 @@ export class LoginComponent implements OnInit {
   submitted = false;
   loading = false;
   error = '';
+  successMessage = '';
 
   constructor(
     private formBuilder: FormBuilder,
@@ -33,6 +34,12 @@ export class LoginComponent implements OnInit {
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
+
+    // Check for query parameters (for messages from registration)
+    const queryParams = this.router.getCurrentNavigation()?.extras.queryParams;
+    if (queryParams && queryParams['registered'] === 'true') {
+      this.successMessage = 'Registration successful! Please log in with your credentials.';
+    }
   }
 
   get f() { return this.loginForm.controls; }

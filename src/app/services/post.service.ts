@@ -12,8 +12,8 @@ export class PostService {
   constructor(private http: HttpClient) { }
 
   // Get all posts with pagination
-  getPosts(page: number = 1, limit: number = 10): Observable<any> {
-    return this.http.get(`${this.apiUrl}?page=${page}&limit=${limit}`);
+  getPosts(page: number = 1, limit: number = 10, random: boolean = false): Observable<any> {
+    return this.http.get(`${this.apiUrl}?page=${page}&limit=${limit}&random=${random.toString()}`);
   }
 
   // Get posts by user ID

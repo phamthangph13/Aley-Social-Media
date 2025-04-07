@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-forgot-password',
@@ -20,10 +21,12 @@ export class ForgotPasswordComponent implements OnInit {
   submitted = false;
   emailSent = false;
   error = '';
+  isLoading = false;
 
   constructor(
     private formBuilder: FormBuilder,
-    public router: Router
+    public router: Router,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -36,15 +39,24 @@ export class ForgotPasswordComponent implements OnInit {
 
   onSubmit(): void {
     this.submitted = true;
+    this.error = '';
 
     if (this.forgotPasswordForm.invalid) {
       return;
     }
 
-    // Here you would implement your password reset logic
-    console.log('Password reset requested for:', this.forgotPasswordForm.value.email);
+    this.isLoading = true;
     
-    // Simulate successful email sending
-    this.emailSent = true;
+    this.authService.forgotPassword(this.forgotPasswordForm.value.email)
+      .subscribe({
+        next: (response) => {
+          this.isLoading = false;
+          this.emailSent = true;
+        },
+        error: (err) => {
+          this.isLoading = false;
+          this.error = err.error?.message || 'An error occurred. Please try again.';
+        }
+      });
   }
 } 
